@@ -20,196 +20,197 @@ import javax.swing.JScrollPane;
 
 import org.cloudbus.cloudsim.sdn.graph.core.Coordinates;
 
-/** Panel that displays a graph */
+/**
+ * Panel that displays a graph
+ */
 public class GraphView extends JPanel {
 
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	private JPanel canvas;
-	private Graph graph;
-	private final int ARR_SIZE = 4;
+    private JPanel canvas;
+    private Graph graph;
+    private final int ARR_SIZE = 4;
 
-	private Image imgDefault;
-	private Image imgHost;
-	private Image imgSwitch;
-	private Image imgVm;
-	
-	public GraphView(final Graph graph) {
+    private Image imgDefault;
+    private Image imgHost;
+    private Image imgSwitch;
+    private Image imgVm;
 
-		this.graph = graph;
-		
-		imgHost = Toolkit.getDefaultToolkit().getImage(this.getClass().getResource("/src/host.png"));
-		imgSwitch = Toolkit.getDefaultToolkit().getImage(this.getClass().getResource("/src/disk.png"));
-		imgVm = Toolkit.getDefaultToolkit().getImage(this.getClass().getResource("/src/vm2.png"));
-		initComponents();
-	}
+    public GraphView(final Graph graph) {
 
-	private void initComponents() {
+        this.graph = graph;
+        imgHost = Toolkit.getDefaultToolkit().getImage(this.getClass().getResource("/images/host.png"));
+        imgSwitch = Toolkit.getDefaultToolkit().getImage(this.getClass().getResource("/images/disk.png"));
+        imgVm = Toolkit.getDefaultToolkit().getImage(this.getClass().getResource("/images/vm2.png"));
+        initComponents();
+    }
 
-		canvas = new JPanel() {
-			
-			@Override
-			public void paint(Graphics g) {
+    private void initComponents() {
 
-				if (graph.getAdjacencyList() == null) {
-					return;
-				}
+        canvas = new JPanel() {
 
-				Map<Node, Coordinates> coordForNodes = new HashMap<Node, Coordinates>();
+            @Override
+            public void paint(Graphics g) {
 
-				int offsetX = canvas.getWidth() / 2;
-				int offsetY = canvas.getHeight() / 2;
-				//System.out.println("sys:"+canvas.getWidth() + ":" + canvas.getHeight());
+                if (graph.getAdjacencyList() == null) {
+                    return;
+                }
 
-				int height = 40;
-				int width = 40;
-				double angle = 2 * Math.PI / graph.getAdjacencyList().keySet().size();
-				int radius = offsetY / 2 - 20;
-				FontMetrics f = g.getFontMetrics();
-				int nodeHeight = Math.max(height, f.getHeight());
-				int nodeWidth = nodeHeight;
+                Map<Node, Coordinates> coordForNodes = new HashMap<Node, Coordinates>();
 
-				int i = 0;
-				for (Node node : graph.getAdjacencyList().keySet()) {
-					// calculate coordinates
-					int x = Double.valueOf(offsetX + Math.cos(i * angle) * radius).intValue();
-					int y = Double.valueOf(offsetY + Math.sin(i * angle) * radius).intValue();
-					//System.out.println(i+":"+x+"-"+y);
+                int offsetX = canvas.getWidth() / 2;
+                int offsetY = canvas.getHeight() / 2;
+                //System.out.println("sys:"+canvas.getWidth() + ":" + canvas.getHeight());
 
-					coordForNodes.put(node, new Coordinates(x, y));
-					node.setCoordinate(new Coordinates(x, y));
-					i++;
-				}
+                int height = 40;
+                int width = 40;
+                double angle = 2 * Math.PI / graph.getAdjacencyList().keySet().size();
+                int radius = offsetY / 2 - 20;
+                FontMetrics f = g.getFontMetrics();
+                int nodeHeight = Math.max(height, f.getHeight());
+                int nodeWidth = nodeHeight;
 
-				Map<Node, List<Node>> drawnList = new HashMap<Node, List<Node>>();
-				// draw edges first
-				// TODO: we draw one edge two times at the moment because we have an undirected graph. But this
-				// shouldn`t matter because we have the same edge costs and no one will see in. Perhaps refactor later.
-				for (Entry<Node, List<Edge>> entry : graph.getAdjacencyList().entrySet()) {
+                int i = 0;
+                for (Node node : graph.getAdjacencyList().keySet()) {
+                    // calculate coordinates
+                    int x = Double.valueOf(offsetX + Math.cos(i * angle) * radius).intValue();
+                    int y = Double.valueOf(offsetY + Math.sin(i * angle) * radius).intValue();
+                    //System.out.println(i+":"+x+"-"+y);
 
-					Coordinates startNode = coordForNodes.get(entry.getKey());
+                    coordForNodes.put(node, new Coordinates(x, y));
+                    node.setCoordinate(new Coordinates(x, y));
+                    i++;
+                }
 
-					for (Edge edge : entry.getValue()) {
+                Map<Node, List<Node>> drawnList = new HashMap<Node, List<Node>>();
+                // draw edges first
+                // TODO: we draw one edge two times at the moment because we have an undirected graph. But this
+                // shouldn`t matter because we have the same edge costs and no one will see in. Perhaps refactor later.
+                for (Entry<Node, List<Edge>> entry : graph.getAdjacencyList().entrySet()) {
 
-						// if other direction was drawn already continue
-						if (drawnList.containsKey(edge.getNode()) && drawnList.get(edge.getNode()).contains(entry.getKey())) {
-							continue;
-						}
+                    Coordinates startNode = coordForNodes.get(entry.getKey());
 
-						Coordinates targetNode = coordForNodes.get(edge.getNode());
-						g.setColor(Color.RED);
-						g.drawLine(startNode.getX(), startNode.getY(), targetNode.getX(), targetNode.getY());
+                    for (Edge edge : entry.getValue()) {
 
-						// add drawn edges to the drawnList
-						if (drawnList.containsKey(entry.getKey())) {
-							drawnList.get(entry.getKey()).add(edge.getNode());
-						} else {
-							List<Node> nodes = new ArrayList<Node>();
-							nodes.add(edge.getNode());
-							drawnList.put(entry.getKey(), nodes);
-						}
+                        // if other direction was drawn already continue
+                        if (drawnList.containsKey(edge.getNode()) && drawnList.get(edge.getNode()).contains(entry.getKey())) {
+                            continue;
+                        }
 
-						// if (startNode.getX() - targetNode.getX() < 0) {
+                        Coordinates targetNode = coordForNodes.get(edge.getNode());
+                        g.setColor(Color.RED);
+                        g.drawLine(startNode.getX(), startNode.getY(), targetNode.getX(), targetNode.getY());
 
-						// int tx = 0;
-						// int ty = 0;
-						// double gradient = (targetNode.getY() - startNode.getY()) /
-						// (targetNode.getX() - startNode.getX());
-						// LOGGER.log(Level.INFO, "Gradient: " + gradient);
+                        // add drawn edges to the drawnList
+                        if (drawnList.containsKey(entry.getKey())) {
+                            drawnList.get(entry.getKey()).add(edge.getNode());
+                        } else {
+                            List<Node> nodes = new ArrayList<Node>();
+                            nodes.add(edge.getNode());
+                            drawnList.put(entry.getKey(), nodes);
+                        }
 
-						// if (startNode.getX() == targetNode.getX()) {
-						// tx = targetNode.getX();
-						// } else {
-						// if ((startNode.getX() - targetNode.getX()) < 0) {
-						// tx = targetNode.getX() - Double.valueOf((nodeHeight / 2)).intValue();
-						// } else {
-						// tx = targetNode.getX() + Double.valueOf((nodeHeight / 2)).intValue();
-						// }
-						// }
-						// if (startNode.getY() == targetNode.getY()) {
-						// ty = targetNode.getY();
-						// } else {
-						// if ((startNode.getY() - targetNode.getY()) < 0) {
-						// ty = targetNode.getY() - Double.valueOf((nodeHeight / 2)).intValue();
-						// } else {
-						// ty = targetNode.getY() + Double.valueOf((nodeHeight / 2)).intValue();
-						// }
-						// }
+                        // if (startNode.getX() - targetNode.getX() < 0) {
 
-						// drawArrow(g, startNode.getX(), startNode.getY(), tx, ty);
+                        // int tx = 0;
+                        // int ty = 0;
+                        // double gradient = (targetNode.getY() - startNode.getY()) /
+                        // (targetNode.getX() - startNode.getX());
+                        // LOGGER.log(Level.INFO, "Gradient: " + gradient);
 
-						// draw edge costs
-						int labelX = (startNode.getX() - targetNode.getX()) / 2;
-						int labelY = (startNode.getY() - targetNode.getY()) / 2;
+                        // if (startNode.getX() == targetNode.getX()) {
+                        // tx = targetNode.getX();
+                        // } else {
+                        // if ((startNode.getX() - targetNode.getX()) < 0) {
+                        // tx = targetNode.getX() - Double.valueOf((nodeHeight / 2)).intValue();
+                        // } else {
+                        // tx = targetNode.getX() + Double.valueOf((nodeHeight / 2)).intValue();
+                        // }
+                        // }
+                        // if (startNode.getY() == targetNode.getY()) {
+                        // ty = targetNode.getY();
+                        // } else {
+                        // if ((startNode.getY() - targetNode.getY()) < 0) {
+                        // ty = targetNode.getY() - Double.valueOf((nodeHeight / 2)).intValue();
+                        // } else {
+                        // ty = targetNode.getY() + Double.valueOf((nodeHeight / 2)).intValue();
+                        // }
+                        // }
 
-						labelX *= -1;
-						labelY *= -1;
+                        // drawArrow(g, startNode.getX(), startNode.getY(), tx, ty);
 
-						labelX += startNode.getX();
-						labelY += startNode.getY();
+                        // draw edge costs
+                        int labelX = (startNode.getX() - targetNode.getX()) / 2;
+                        int labelY = (startNode.getY() - targetNode.getY()) / 2;
 
-						//g.setColor(Color.BLACK);
-						//g.drawString(String.valueOf(edge.getInfo()), labelX - f.stringWidth(String.valueOf(edge.getInfo())) / 2, labelY + f.getHeight() / 2);
-					}
-				}
+                        labelX *= -1;
+                        labelY *= -1;
 
-				for (Entry<Node, Coordinates> entry : coordForNodes.entrySet()) {
-					// first paint a single node for testing.
-					g.setColor(Color.black);
-					// int nodeWidth = Math.max(width, f.stringWidth(entry.getKey().getNodeText()) + width / 2);
+                        labelX += startNode.getX();
+                        labelY += startNode.getY();
 
-					Coordinates wrapper = entry.getValue();
-					switch(entry.getKey().getType()){
-						case "host":
-							g.drawImage(imgHost, wrapper.getX() - nodeWidth / 2, wrapper.getY() - nodeHeight / 2, nodeWidth, nodeHeight, this);
-							break;
-						case "vm":
-							g.drawImage(imgVm, wrapper.getX() - nodeWidth / 2, wrapper.getY() - nodeHeight / 2, nodeWidth, nodeHeight, this);
-							break;
-						case "core":
-						case "edge":
-							g.drawImage(imgSwitch, wrapper.getX() - nodeWidth / 2, wrapper.getY() - nodeHeight / 2, nodeWidth, nodeHeight, this);
-							break;
-					}
-				
-				     //g.setColor(Color.white);
-					//g.fillOval(wrapper.getX() - nodeWidth / 2, wrapper.getY() - nodeHeight / 2, nodeWidth, nodeHeight);
-					//g.setColor(Color.black);
-					//g.drawOval(wrapper.getX() - nodeWidth / 2, wrapper.getY() - nodeHeight / 2, nodeWidth, nodeHeight);
-					//System.out.println((wrapper.getX())+" "+(wrapper.getY()));
+                        //g.setColor(Color.BLACK);
+                        //g.drawString(String.valueOf(edge.getInfo()), labelX - f.stringWidth(String.valueOf(edge.getInfo())) / 2, labelY + f.getHeight() / 2);
+                    }
+                }
 
-					//g.drawString(entry.getKey().getName(), wrapper.getX() - f.stringWidth(entry.getKey().getName()) / 2, wrapper.getY() + f.getHeight() / 2);
+                for (Entry<Node, Coordinates> entry : coordForNodes.entrySet()) {
+                    // first paint a single node for testing.
+                    g.setColor(Color.black);
+                    // int nodeWidth = Math.max(width, f.stringWidth(entry.getKey().getNodeText()) + width / 2);
 
-				}
-			}
-		};
-		JScrollPane scrollPane = new JScrollPane(canvas);
+                    Coordinates wrapper = entry.getValue();
+                    switch (entry.getKey().getType()) {
+                        case "host":
+                            g.drawImage(imgHost, wrapper.getX() - nodeWidth / 2, wrapper.getY() - nodeHeight / 2, nodeWidth, nodeHeight, this);
+                            break;
+                        case "vm":
+                            g.drawImage(imgVm, wrapper.getX() - nodeWidth / 2, wrapper.getY() - nodeHeight / 2, nodeWidth, nodeHeight, this);
+                            break;
+                        case "core":
+                        case "edge":
+                            g.drawImage(imgSwitch, wrapper.getX() - nodeWidth / 2, wrapper.getY() - nodeHeight / 2, nodeWidth, nodeHeight, this);
+                            break;
+                    }
+
+                    //g.setColor(Color.white);
+                    //g.fillOval(wrapper.getX() - nodeWidth / 2, wrapper.getY() - nodeHeight / 2, nodeWidth, nodeHeight);
+                    //g.setColor(Color.black);
+                    //g.drawOval(wrapper.getX() - nodeWidth / 2, wrapper.getY() - nodeHeight / 2, nodeWidth, nodeHeight);
+                    //System.out.println((wrapper.getX())+" "+(wrapper.getY()));
+
+                    //g.drawString(entry.getKey().getName(), wrapper.getX() - f.stringWidth(entry.getKey().getName()) / 2, wrapper.getY() + f.getHeight() / 2);
+
+                }
+            }
+        };
+        JScrollPane scrollPane = new JScrollPane(canvas);
 
 //		canvas.setBorder(BorderFactory.createLineBorder(Color.GREEN));
 //		scrollPane.setBorder(BorderFactory.createLineBorder(Color.BLUE));
-		// scrollPane.setPreferredSize(new Dimension(200, 200));
+        // scrollPane.setPreferredSize(new Dimension(200, 200));
 
-		setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
-		add(scrollPane);
-	}
+        setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
+        add(scrollPane);
+    }
 
-	private void drawArrow(Graphics g1, int x1, int y1, int x2, int y2) {
-		Graphics2D g = (Graphics2D) g1.create();
+    private void drawArrow(Graphics g1, int x1, int y1, int x2, int y2) {
+        Graphics2D g = (Graphics2D) g1.create();
 
-		double dx = x2 - x1, dy = y2 - y1;
-		double angle = Math.atan2(dy, dx);
-		int len = (int) Math.sqrt(dx * dx + dy * dy);
-		AffineTransform at = AffineTransform.getTranslateInstance(x1, y1);
-		at.concatenate(AffineTransform.getRotateInstance(angle));
-		g.transform(at);
+        double dx = x2 - x1, dy = y2 - y1;
+        double angle = Math.atan2(dy, dx);
+        int len = (int) Math.sqrt(dx * dx + dy * dy);
+        AffineTransform at = AffineTransform.getTranslateInstance(x1, y1);
+        at.concatenate(AffineTransform.getRotateInstance(angle));
+        g.transform(at);
 
-		// Draw horizontal arrow starting in (0, 0)
-		// g.drawLine(0, 0, len, 0);
-		g.fillPolygon(new int[] { len, len - ARR_SIZE, len - ARR_SIZE, len }, new int[] { 0, -ARR_SIZE, ARR_SIZE, 0 }, 4);
-	}
-	
-	public void setGraph(Graph newGraph){
-		this.graph = newGraph;
+        // Draw horizontal arrow starting in (0, 0)
+        // g.drawLine(0, 0, len, 0);
+        g.fillPolygon(new int[]{len, len - ARR_SIZE, len - ARR_SIZE, len}, new int[]{0, -ARR_SIZE, ARR_SIZE, 0}, 4);
+    }
+
+    public void setGraph(Graph newGraph) {
+        this.graph = newGraph;
 		/*this.graph.clearGraph();
 		for (Entry<Node, List<Edge>> entry : newGraph.getAdjacencyList().entrySet()) {
 			graph.addNode(entry.getKey());
@@ -217,6 +218,6 @@ public class GraphView extends JPanel {
 				graph.addEdge(entry.getKey(), edge);
 			}
 		}*/
-	}
+    }
 
 }

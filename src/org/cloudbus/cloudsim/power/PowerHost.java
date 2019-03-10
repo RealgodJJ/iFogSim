@@ -18,10 +18,10 @@ import org.cloudbus.cloudsim.provisioners.BwProvisioner;
 import org.cloudbus.cloudsim.provisioners.RamProvisioner;
 
 /**
- * PowerHost class enables simulation of power-aware hosts.
+ *
  * 
  * If you are using any algorithms, policies or workload included in the power package please cite
- * the following paper:
+ *  * the following paper:
  * 
  * Anton Beloglazov, and Rajkumar Buyya, "Optimal Online Deterministic Algorithms and Adaptive
  * Heuristics for Energy and Performance Efficient Dynamic Consolidation of Virtual Machines in

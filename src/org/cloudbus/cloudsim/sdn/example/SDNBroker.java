@@ -19,7 +19,7 @@ import org.cloudbus.cloudsim.core.CloudSimTags;
 import org.cloudbus.cloudsim.core.SimEntity;
 import org.cloudbus.cloudsim.core.SimEvent;
 import org.cloudbus.cloudsim.sdn.Constants;
-import org.cloudbus.cloudsim.sdn.SDNDatacenter;
+import org.cloudbus.cloudsim.sdn.SDNDataCenter;
 
 /**
  * Broker class for CloudSimSDN example. This class represents a broker (Service Provider)
@@ -30,7 +30,7 @@ import org.cloudbus.cloudsim.sdn.SDNDatacenter;
  */
 public class SDNBroker extends SimEntity {
 
-	private SDNDatacenter datacenter = null;
+	private SDNDataCenter datacenter = null;
 	private String applicationFileName = null;
 	private List<String> workloadFileNames=null;
 
@@ -55,7 +55,7 @@ public class SDNBroker extends SimEntity {
 			Log.printLine(CloudSim.clock() + ": " + getName() + ": Shuttingdown.. VM:" + vm.getId());
 		}
 	}
-	public void submitDeployApplication(SDNDatacenter dc, String filename) {
+	public void submitDeployApplication(SDNDataCenter dc, String filename) {
 		this.datacenter = dc;
 		this.applicationFileName = filename;
 	}

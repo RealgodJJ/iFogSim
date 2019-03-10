@@ -18,7 +18,7 @@ import org.cloudbus.cloudsim.core.SimEvent;
 import org.cloudbus.cloudsim.core.predicates.PredicateType;
 
 /**
- * This class allows to simulate aggregate switch for Datacenter network. It interacts with other
+ * This class allows to simulate aggregate switch for DataCenter network. It interacts with other
  * switches in order to exchange packets.
  * 
  * Please refer to following publication for more details:
@@ -38,9 +38,9 @@ public class AggregateSwitch extends Switch {
 	 * 
 	 * @param name Name of the switch
 	 * @param level At which level switch is with respect to hosts.
-	 * @param dc Pointer to Datacenter
+	 * @param dc Pointer to DataCenter
 	 */
-	public AggregateSwitch(String name, int level, NetworkDatacenter dc) {
+	public AggregateSwitch(String name, int level, NetworkDataCenter dc) {
 		super(name, level, dc);
 		downlinkswitchpktlist = new HashMap<Integer, List<NetworkPacket>>();
 		uplinkswitchpktlist = new HashMap<Integer, List<NetworkPacket>>();

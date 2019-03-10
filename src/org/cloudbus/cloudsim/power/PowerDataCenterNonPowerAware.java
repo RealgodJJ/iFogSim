@@ -11,7 +11,7 @@ package org.cloudbus.cloudsim.power;
 import java.util.List;
 import java.util.Map;
 
-import org.cloudbus.cloudsim.DatacenterCharacteristics;
+import org.cloudbus.cloudsim.DataCenterCharacteristics;
 import org.cloudbus.cloudsim.Log;
 import org.cloudbus.cloudsim.Storage;
 import org.cloudbus.cloudsim.Vm;
@@ -21,7 +21,7 @@ import org.cloudbus.cloudsim.core.CloudSimTags;
 import org.cloudbus.cloudsim.core.predicates.PredicateType;
 
 /**
- * PowerDatacenterNonPowerAware is a class that represents a non-power aware data center in the
+ * PowerDataCenterNonPowerAware is a class that represents a non-power aware data center in the
  * context of power-aware simulations.
  * 
  * If you are using any algorithms, policies or workload included in the power package please cite
@@ -35,7 +35,7 @@ import org.cloudbus.cloudsim.core.predicates.PredicateType;
  * @author Anton Beloglazov
  * @since CloudSim Toolkit 2.0
  */
-public class PowerDatacenterNonPowerAware extends PowerDatacenter {
+public class PowerDataCenterNonPowerAware extends PowerDataCenter {
 
 	/**
 	 * Instantiates a new datacenter.
@@ -49,9 +49,9 @@ public class PowerDatacenterNonPowerAware extends PowerDatacenter {
 	 * 
 	 * @throws Exception the exception
 	 */
-	public PowerDatacenterNonPowerAware(
+	public PowerDataCenterNonPowerAware(
 			String name,
-			DatacenterCharacteristics characteristics,
+			DataCenterCharacteristics characteristics,
 			VmAllocationPolicy vmAllocationPolicy,
 			List<Storage> storageList,
 			double schedulingInterval) throws Exception {
@@ -59,7 +59,7 @@ public class PowerDatacenterNonPowerAware extends PowerDatacenter {
 	}
 
 	/**
-	 * Updates processing of each cloudlet running in this PowerDatacenter. It is necessary because
+	 * Updates processing of each cloudlet running in this PowerDataCenter. It is necessary because
 	 * Hosts and VirtualMachines are simple objects, not entities. So, they don't receive events and
 	 * updating cloudlets inside them must be called from the outside.
 	 * 

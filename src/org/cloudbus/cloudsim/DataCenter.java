@@ -20,7 +20,7 @@ import org.cloudbus.cloudsim.core.SimEvent;
 
 
 /**
- * Datacenter class is a CloudResource whose hostList are virtualized. It deals with processing of
+ * DataCenter class is a CloudResource whose hostList are virtualized. It deals with processing of
  * VM queries (i.e., handling of VMs) instead of processing Cloudlet-related queries. So, even
  * though an AllocPolicy will be instantiated (in the init() method of the superclass, it will not
  * be used, as processing of cloudlets are handled by the CloudletScheduler and processing of
@@ -30,10 +30,10 @@ import org.cloudbus.cloudsim.core.SimEvent;
  * @author Anton Beloglazov
  * @since CloudSim Toolkit 1.0
  */
-public class Datacenter extends SimEntity {
+public class DataCenter extends SimEntity {
 
 	/** The characteristics. */
-	private DatacenterCharacteristics characteristics;
+	private DataCenterCharacteristics characteristics;
 
 	/** The regional cis name. */
 	private String regionalCisName;
@@ -54,11 +54,11 @@ public class Datacenter extends SimEntity {
 	private double schedulingInterval;
 
 	/**
-	 * Allocates a new PowerDatacenter object.
+	 * Allocates a new PowerDataCenter object.
 	 * 
 	 * @param name the name to be associated with this entity (as required by Sim_entity class from
 	 *            simjava package)
-	 * @param characteristics an object of DatacenterCharacteristics
+	 * @param characteristics an object of DataCenterCharacteristics
 	 * @param storageList a LinkedList of storage elements, for data simulation
 	 * @param vmAllocationPolicy the vmAllocationPolicy
 	 * @throws Exception This happens when one of the following scenarios occur:
@@ -73,9 +73,9 @@ public class Datacenter extends SimEntity {
 	 * @pre resource != null
 	 * @post $none
 	 */
-	public Datacenter(
+	public DataCenter(
 			String name,
-			DatacenterCharacteristics characteristics,
+			DataCenterCharacteristics characteristics,
 			VmAllocationPolicy vmAllocationPolicy,
 			List<Storage> storageList,
 			double schedulingInterval) throws Exception {
@@ -88,7 +88,7 @@ public class Datacenter extends SimEntity {
 		setSchedulingInterval(schedulingInterval);
 		
 		for (Host host : getCharacteristics().getHostList()) {
-			host.setDatacenter(this);
+			host.setDataCenter(this);
 		}
 
 		// If this resource doesn't have any PEs then no useful at all
@@ -113,7 +113,7 @@ public class Datacenter extends SimEntity {
 	}
 
 	/**
-	 * Processes events or services that are available for this PowerDatacenter.
+	 * Processes events or services that are available for this PowerDataCenter.
 	 * 
 	 * @param ev a Sim_event object
 	 * @pre ev != null
@@ -349,7 +349,7 @@ public class Datacenter extends SimEntity {
 
 	/**
 	 * Process the event for an User/Broker who wants to know the status of a Cloudlet. This
-	 * PowerDatacenter will then send the status back to the User/Broker.
+	 * PowerDataCenter will then send the status back to the User/Broker.
 	 * 
 	 * @param ev a Sim_event object
 	 * @pre ev != null
@@ -416,8 +416,8 @@ public class Datacenter extends SimEntity {
 	}
 
 	/**
-	 * Process the event for an User/Broker who wants to create a VM in this PowerDatacenter. This
-	 * PowerDatacenter will then send the status back to the User/Broker.
+	 * Process the event for an User/Broker who wants to create a VM in this PowerDataCenter. This
+	 * PowerDataCenter will then send the status back to the User/Broker.
 	 * 
 	 * @param ev a Sim_event object
 	 * @param ack the ack
@@ -456,7 +456,7 @@ public class Datacenter extends SimEntity {
 
 	/**
 	 * Process the event for an User/Broker who wants to destroy a VM previously created in this
-	 * PowerDatacenter. This PowerDatacenter may send, upon request, the status back to the
+	 * PowerDataCenter. This PowerDataCenter may send, upon request, the status back to the
 	 * User/Broker.
 	 * 
 	 * @param ev a Sim_event object
@@ -481,7 +481,7 @@ public class Datacenter extends SimEntity {
 	}
 
 	/**
-	 * Process the event for an User/Broker who wants to migrate a VM. This PowerDatacenter will
+	 * Process the event for an User/Broker who wants to migrate a VM. This PowerDataCenter will
 	 * then send the status back to the User/Broker.
 	 * 
 	 * @param ev a Sim_event object
@@ -504,7 +504,7 @@ public class Datacenter extends SimEntity {
 		host.removeMigratingInVm(vm);
 		boolean result = getVmAllocationPolicy().allocateHostForVm(vm, host);
 		if (!result) {
-			Log.printLine("[Datacenter.processVmMigrate] VM allocation to the destination host failed");
+			Log.printLine("[DataCenter.processVmMigrate] VM allocation to the destination host failed");
 			System.exit(0);
 		}
 
@@ -854,7 +854,7 @@ public class Datacenter extends SimEntity {
 	}
 
 	/**
-	 * Updates processing of each cloudlet running in this PowerDatacenter. It is necessary because
+	 * Updates processing of each cloudlet running in this PowerDataCenter. It is necessary because
 	 * Hosts and VirtualMachines are simple objects, not entities. So, they don't receive events and
 	 * updating cloudlets inside them must be called from the outside.
 	 * 
@@ -891,7 +891,7 @@ public class Datacenter extends SimEntity {
 	}
 
 	/**
-	 * Verifies if some cloudlet inside this PowerDatacenter already finished. If yes, send it to
+	 * Verifies if some cloudlet inside this PowerDataCenter already finished. If yes, send it to
 	 * the User/Broker
 	 * 
 	 * @pre $none
@@ -1054,7 +1054,7 @@ public class Datacenter extends SimEntity {
 	 * 
 	 * @return the characteristics
 	 */
-	protected DatacenterCharacteristics getCharacteristics() {
+	protected DataCenterCharacteristics getCharacteristics() {
 		return characteristics;
 	}
 
@@ -1063,7 +1063,7 @@ public class Datacenter extends SimEntity {
 	 * 
 	 * @param characteristics the new characteristics
 	 */
-	protected void setCharacteristics(DatacenterCharacteristics characteristics) {
+	protected void setCharacteristics(DataCenterCharacteristics characteristics) {
 		this.characteristics = characteristics;
 	}
 

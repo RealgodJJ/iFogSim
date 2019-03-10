@@ -13,21 +13,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.cloudbus.cloudsim.Cloudlet;
-import org.cloudbus.cloudsim.CloudletScheduler;
-import org.cloudbus.cloudsim.Datacenter;
-import org.cloudbus.cloudsim.DatacenterCharacteristics;
-import org.cloudbus.cloudsim.Host;
-import org.cloudbus.cloudsim.Log;
-import org.cloudbus.cloudsim.Storage;
-import org.cloudbus.cloudsim.Vm;
-import org.cloudbus.cloudsim.VmAllocationPolicy;
+import org.cloudbus.cloudsim.*;
 import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.core.CloudSimTags;
 import org.cloudbus.cloudsim.core.SimEvent;
 
 /**
- * NetworkDatacenter class is a Datacenter whose hostList are virtualized and networked. It contains
+ * NetworkDataCenter class is a DataCenter whose hostList are virtualized and networked. It contains
  * all the information about internal network. For example, which VM is connected to Switch etc. It
  * deals with processing of VM queries (i.e., handling of VMs) instead of processing
  * Cloudlet-related queries. So, even though an AllocPolicy will be instantiated (in the init()
@@ -43,14 +35,14 @@ import org.cloudbus.cloudsim.core.SimEvent;
  * @author Saurabh Kumar Garg
  * @since CloudSim Toolkit 3.0
  */
-public class NetworkDatacenter extends Datacenter {
+public class NetworkDataCenter extends DataCenter {
 
 	/**
-	 * Allocates a new NetworkDatacenter object.
+	 * Allocates a new NetworkDataCenter object.
 	 * 
 	 * @param name the name to be associated with this entity (as required by Sim_entity class from
 	 *        simjava package)
-	 * @param characteristics an object of DatacenterCharacteristics
+	 * @param characteristics an object of DataCenterCharacteristics
 	 * @param storageList a LinkedList of storage elements, for data simulation
 	 * @param vmAllocationPolicy the vmAllocationPolicy
 	 * 
@@ -67,9 +59,9 @@ public class NetworkDatacenter extends Datacenter {
 	 * @pre resource != null
 	 * @post $none
 	 */
-	public NetworkDatacenter(
+	public NetworkDataCenter(
 			String name,
-			DatacenterCharacteristics characteristics,
+			DataCenterCharacteristics characteristics,
 			VmAllocationPolicy vmAllocationPolicy,
 			List<Storage> storageList,
 			double schedulingInterval) throws Exception {
@@ -89,7 +81,7 @@ public class NetworkDatacenter extends Datacenter {
 	public Map<Integer, Integer> VmtoHostlist;
 
 	/**
-	 * Get list of all EdgeSwitches in the Datacenter network One can design similar functions for
+	 * Get list of all EdgeSwitches in the DataCenter network One can design similar functions for
 	 * other type of switches.
 	 * 
 	 */
@@ -105,7 +97,7 @@ public class NetworkDatacenter extends Datacenter {
 	}
 
 	/**
-	 * Create the VM within the NetworkDatacenter. It can be directly accessed by Datacenter Broker
+	 * Create the VM within the NetworkDataCenter. It can be directly accessed by DataCenter Broker
 	 * which manage allocation of Cloudlets.
 	 * 
 	 * 

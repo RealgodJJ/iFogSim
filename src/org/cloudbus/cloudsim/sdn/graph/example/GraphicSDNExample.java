@@ -4,19 +4,15 @@ import java.util.Calendar;
 import java.util.LinkedList;
 import java.util.List;
 
-import javax.swing.JFrame;
 import javax.swing.JTextArea;
 
 import org.cloudbus.cloudsim.Cloudlet;
-import org.cloudbus.cloudsim.DatacenterCharacteristics;
+import org.cloudbus.cloudsim.DataCenterCharacteristics;
 import org.cloudbus.cloudsim.Host;
 import org.cloudbus.cloudsim.Storage;
 import org.cloudbus.cloudsim.core.CloudSim;
-import org.cloudbus.cloudsim.sdn.Activity;
-import org.cloudbus.cloudsim.sdn.Processing;
-import org.cloudbus.cloudsim.sdn.Request;
-import org.cloudbus.cloudsim.sdn.SDNDatacenter;
-import org.cloudbus.cloudsim.sdn.Transmission;
+import org.cloudbus.cloudsim.sdn.*;
+import org.cloudbus.cloudsim.sdn.SDNDataCenter;
 import org.cloudbus.cloudsim.sdn.example.SDNBroker;
 import org.cloudbus.cloudsim.sdn.example.SimpleNetworkOperatingSystem;
 import org.cloudbus.cloudsim.sdn.example.VmAllocationPolicyCombinedLeastFullFirst;
@@ -54,8 +50,8 @@ public class GraphicSDNExample {
 			boolean trace_flag = false; // mean trace events
 			CloudSim.init(num_user, calendar, trace_flag);
 
-			// Create a Datacenter
-			SDNDatacenter datacenter = createSDNDatacenter("Datacenter_0", physicalTopologyFile);
+			// Create a DataCenter
+			SDNDataCenter datacenter = createSDNDatacenter("Datacenter_0", physicalTopologyFile);
 
 			// Broker
 			broker = createBroker();
@@ -128,7 +124,7 @@ public class GraphicSDNExample {
 	 * @return the datacenter
 	 */
 	private SimpleNetworkOperatingSystem nos;
-	private SDNDatacenter createSDNDatacenter(String name, String physicalTopology) {
+	private SDNDataCenter createSDNDatacenter(String name, String physicalTopology) {
 
 		// In order to get Host information, pre-create NOS.
 		
@@ -148,16 +144,16 @@ public class GraphicSDNExample {
 		LinkedList<Storage> storageList = new LinkedList<Storage>(); // we are not adding SAN
 													// devices by now
 
-		DatacenterCharacteristics characteristics = new DatacenterCharacteristics(
+		DataCenterCharacteristics characteristics = new DataCenterCharacteristics(
 				arch, os, vmm, hostList, time_zone, cost, costPerMem,
 				costPerStorage, costPerBw);
 
-		// Create Datacenter with previously set parameters
-		SDNDatacenter datacenter = null;
+		// Create DataCenter with previously set parameters
+		SDNDataCenter datacenter = null;
 		try {
-			datacenter = new SDNDatacenter(name, characteristics, new VmAllocationPolicyCombinedLeastFullFirst(hostList), storageList, 0, nos);
-			//datacenter = new SDNDatacenter(name, characteristics, new VmAllocationPolicyCombinedMostFullFirst(hostList), storageList, 0, nos);
-			//datacenter = new SDNDatacenter(name, characteristics, new VmAllocationPolicyMipsLeastFullFirst(hostList), storageList, 0, nos);
+			datacenter = new SDNDataCenter(name, characteristics, new VmAllocationPolicyCombinedLeastFullFirst(hostList), storageList, 0, nos);
+			//datacenter = new SDNDataCenter(name, characteristics, new VmAllocationPolicyCombinedMostFullFirst(hostList), storageList, 0, nos);
+			//datacenter = new SDNDataCenter(name, characteristics, new VmAllocationPolicyMipsLeastFullFirst(hostList), storageList, 0, nos);
 			
 			nos.setDatacenter(datacenter);
 		} catch (Exception e) {

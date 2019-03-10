@@ -57,9 +57,9 @@ public class FogGui extends JFrame {
 	private JPanel graph;
 	
 	private Graph physicalGraph;
-	//private Graph virtualGraph;
+	private Graph virtualGraph;
 	private GraphView physicalCanvas;
-	//private GraphView virtualCanvas;
+	private GraphView virtualCanvas;
 	
 	private JButton btnRun;
 	
@@ -175,7 +175,7 @@ public class FogGui extends JFrame {
 		};
 		ActionListener importPhyTopoListener = new ActionListener() {
 		    public void actionPerformed(ActionEvent e) {
-		    	String fileName = importFile("josn");
+		    	String fileName = importFile("json");
 		    	Graph phyGraph= Bridge.jsonToGraph(fileName, 0);
 		    	physicalGraph = phyGraph;
 		    	physicalCanvas.setGraph(physicalGraph);

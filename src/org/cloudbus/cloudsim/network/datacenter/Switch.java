@@ -56,7 +56,7 @@ public class Switch extends SimEntity {
 
 	public double numport;
 
-	public NetworkDatacenter dc;
+	public NetworkDataCenter dc;
 
 	// something is running on these hosts
 	public SortedMap<Double, List<NetworkHost>> fintimelistHost = new TreeMap<Double, List<NetworkHost>>();
@@ -72,7 +72,7 @@ public class Switch extends SimEntity {
 
 	public Map<Integer, NetworkVm> Vmlist;
 
-	public Switch(String name, int level, NetworkDatacenter dc) {
+	public Switch(String name, int level, NetworkDataCenter dc) {
 		super(name);
 		this.level = level;
 		this.dc = dc;

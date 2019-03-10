@@ -10,31 +10,25 @@ package org.cloudbus.cloudsim.sdn;
 import java.util.List;
 import java.util.Map;
 
-import org.cloudbus.cloudsim.Cloudlet;
-import org.cloudbus.cloudsim.Datacenter;
-import org.cloudbus.cloudsim.DatacenterCharacteristics;
-import org.cloudbus.cloudsim.Host;
-import org.cloudbus.cloudsim.Storage;
-import org.cloudbus.cloudsim.Vm;
-import org.cloudbus.cloudsim.VmAllocationPolicy;
+import org.cloudbus.cloudsim.*;
 import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.core.CloudSimTags;
 import org.cloudbus.cloudsim.core.SimEvent;
 
 /**
- * Extended class of Datacenter that supports processing SDN-specific events.
- * In addtion to the default Datacenter, it processes Request submission to VM,
+ * Extended class of DataCenter that supports processing SDN-specific events.
+ * In addtion to the default DataCenter, it processes Request submission to VM,
  * and application deployment request. 
  * 
  * @author Jungmin Son
  * @author Rodrigo N. Calheiros
  * @since CloudSimSDN 1.0
  */
-public class SDNDatacenter extends Datacenter {
+public class SDNDataCenter extends DataCenter {
 
 	NetworkOperatingSystem nos;
 	
-	public SDNDatacenter(String name, DatacenterCharacteristics characteristics, VmAllocationPolicy vmAllocationPolicy, List<Storage> storageList, double schedulingInterval, NetworkOperatingSystem nos) throws Exception {
+	public SDNDataCenter(String name, DataCenterCharacteristics characteristics, VmAllocationPolicy vmAllocationPolicy, List<Storage> storageList, double schedulingInterval, NetworkOperatingSystem nos) throws Exception {
 		super(name, characteristics, vmAllocationPolicy, storageList, schedulingInterval);
 		
 		this.nos=nos;

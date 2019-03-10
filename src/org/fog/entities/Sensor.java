@@ -77,7 +77,8 @@ public class Sensor extends SimEntity{
 		setSensorName(tupleType);
 		setUserId(userId);
 	}
-	
+
+	//边缘传感器检测节点发送信息到雾设备
 	public void transmit(){
 		AppEdge _edge = null;
 		for(AppEdge edge : getApp().getEdges()){

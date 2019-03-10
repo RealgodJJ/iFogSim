@@ -65,7 +65,6 @@ public class AddPhysicalNode extends JDialog {
 		pack();
 		setLocationRelativeTo(frame);
 		setVisible(true);
-
 	}
 
 	private JPanel createButtonPanel() {

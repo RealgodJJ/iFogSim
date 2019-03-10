@@ -50,7 +50,7 @@ public abstract class Middlebox {
 		Cloudlet cl = new Cloudlet(id++,mipsPerOp,1,0,0,new UtilizationModelFull(),new UtilizationModelFull(),new UtilizationModelFull());
 		cl.setVmId(vm.getId());
 		
-		host.schedule(host.getHost().getDatacenter().getId(), 0.0, CloudSimTags.CLOUDLET_SUBMIT, cl);
+		host.schedule(host.getHost().getDataCenter().getId(), 0.0, CloudSimTags.CLOUDLET_SUBMIT, cl);
 	}
 
 }

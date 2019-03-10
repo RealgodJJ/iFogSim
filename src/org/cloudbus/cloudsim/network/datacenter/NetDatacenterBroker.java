@@ -14,10 +14,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import org.cloudbus.cloudsim.Cloudlet;
-import org.cloudbus.cloudsim.DatacenterCharacteristics;
-import org.cloudbus.cloudsim.Log;
-import org.cloudbus.cloudsim.Vm;
+import org.cloudbus.cloudsim.*;
 import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.core.CloudSimTags;
 import org.cloudbus.cloudsim.core.SimEntity;
@@ -26,7 +23,7 @@ import org.cloudbus.cloudsim.distributions.UniformDistr;
 import org.cloudbus.cloudsim.lists.VmList;
 
 /**
- * NetDatacentreBroker represents a broker acting on behalf of Datacenter provider. It hides VM
+ * NetDatacentreBroker represents a broker acting on behalf of DataCenter provider. It hides VM
  * management, as vm creation, submission of cloudlets to this VMs and destruction of VMs. NOTE- It
  * is an example only. It work on behalf of a provider not for users. One has to implement
  * interaction with user broker to this broker.
@@ -79,9 +76,9 @@ public class NetDatacenterBroker extends SimEntity {
 	private Map<Integer, Integer> vmsToDatacentersMap;
 
 	/** The datacenter characteristics list. */
-	private Map<Integer, DatacenterCharacteristics> datacenterCharacteristicsList;
+	private Map<Integer, DataCenterCharacteristics> datacenterCharacteristicsList;
 
-	public static NetworkDatacenter linkDC;
+	public static NetworkDataCenter linkDC;
 
 	public boolean createvmflag = true;
 
@@ -117,7 +114,7 @@ public class NetDatacenterBroker extends SimEntity {
 		setDatacenterIdsList(new LinkedList<Integer>());
 		setDatacenterRequestedIdsList(new ArrayList<Integer>());
 		setVmsToDatacentersMap(new HashMap<Integer, Integer>());
-		setDatacenterCharacteristicsList(new HashMap<Integer, DatacenterCharacteristics>());
+		setDatacenterCharacteristicsList(new HashMap<Integer, DataCenterCharacteristics>());
 
 	}
 
@@ -146,7 +143,7 @@ public class NetDatacenterBroker extends SimEntity {
 		getCloudletList().addAll(list);
 	}
 
-	public void setLinkDC(NetworkDatacenter alinkDC) {
+	public void setLinkDC(NetworkDataCenter alinkDC) {
 		linkDC = alinkDC;
 	}
 
@@ -193,7 +190,7 @@ public class NetDatacenterBroker extends SimEntity {
 	}
 
 	/**
-	 * Process the return of a request for the characteristics of a PowerDatacenter.
+	 * Process the return of a request for the characteristics of a PowerDataCenter.
 	 * 
 	 * @param ev a SimEvent object
 	 * 
@@ -201,7 +198,7 @@ public class NetDatacenterBroker extends SimEntity {
 	 * @post $none
 	 */
 	protected void processResourceCharacteristics(SimEvent ev) {
-		DatacenterCharacteristics characteristics = (DatacenterCharacteristics) ev.getData();
+		DataCenterCharacteristics characteristics = (DataCenterCharacteristics) ev.getData();
 		getDatacenterCharacteristicsList().put(characteristics.getId(), characteristics);
 
 		if (getDatacenterCharacteristicsList().size() == getDatacenterIdsList().size()) {
@@ -211,7 +208,7 @@ public class NetDatacenterBroker extends SimEntity {
 	}
 
 	/**
-	 * Process a request for the characteristics of a PowerDatacenter.
+	 * Process a request for the characteristics of a PowerDataCenter.
 	 * 
 	 * @param ev a SimEvent object
 	 * 
@@ -221,7 +218,7 @@ public class NetDatacenterBroker extends SimEntity {
 
 	protected void processResourceCharacteristicsRequest(SimEvent ev) {
 		setDatacenterIdsList(CloudSim.getCloudResourceList());
-		setDatacenterCharacteristicsList(new HashMap<Integer, DatacenterCharacteristics>());
+		setDatacenterCharacteristicsList(new HashMap<Integer, DataCenterCharacteristics>());
 
 		Log.printLine(CloudSim.clock() + ": " + getName() + ": Cloud Resource List received with "
 				+ getDatacenterIdsList().size() + " resource(s)");
@@ -290,7 +287,7 @@ public class NetDatacenterBroker extends SimEntity {
 	/**
 	 * Create the virtual machines in a datacenter and submit/schedule cloudlets to them.
 	 * 
-	 * @param datacenterId Id of the chosen PowerDatacenter
+	 * @param datacenterId Id of the chosen PowerDataCenter
 	 * 
 	 * @pre $none
 	 * @post $none
@@ -654,7 +651,7 @@ public class NetDatacenterBroker extends SimEntity {
 	 * 
 	 * @return the datacenter characteristics list
 	 */
-	protected Map<Integer, DatacenterCharacteristics> getDatacenterCharacteristicsList() {
+	protected Map<Integer, DataCenterCharacteristics> getDatacenterCharacteristicsList() {
 		return datacenterCharacteristicsList;
 	}
 
@@ -664,7 +661,7 @@ public class NetDatacenterBroker extends SimEntity {
 	 * @param datacenterCharacteristicsList the datacenter characteristics list
 	 */
 	protected void setDatacenterCharacteristicsList(
-			Map<Integer, DatacenterCharacteristics> datacenterCharacteristicsList) {
+			Map<Integer, DataCenterCharacteristics> datacenterCharacteristicsList) {
 		this.datacenterCharacteristicsList = datacenterCharacteristicsList;
 	}
 

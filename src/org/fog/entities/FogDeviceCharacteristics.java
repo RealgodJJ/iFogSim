@@ -11,14 +11,14 @@ package org.fog.entities;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.cloudbus.cloudsim.DatacenterCharacteristics;
+import org.cloudbus.cloudsim.DataCenterCharacteristics;
 import org.cloudbus.cloudsim.Host;
 import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.lists.HostList;
 import org.cloudbus.cloudsim.lists.PeList;
 import org.fog.utils.GeoCoverage;
 
-public class FogDeviceCharacteristics extends DatacenterCharacteristics{
+public class FogDeviceCharacteristics extends DataCenterCharacteristics {
 
 	/** The geographical coverage of the fog device */
 	private GeoCoverage geoCoverage;

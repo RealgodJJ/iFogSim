@@ -244,7 +244,7 @@ public class CloudSimTags {
 	public static final int VM_DATA_DEL_ACK = BASE + 40;
 
 	/**
-	 * Denotes an internal event generated in a PowerDatacenter
+	 * Denotes an internal event generated in a PowerDataCenter
 	 */
 	public static final int VM_DATACENTER_EVENT = BASE + 41;
 

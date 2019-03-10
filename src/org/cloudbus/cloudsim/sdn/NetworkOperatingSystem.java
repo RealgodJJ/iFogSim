@@ -63,7 +63,7 @@ public abstract class NetworkOperatingSystem extends SimEntity {
 	protected List<SDNHost> sdnhosts;
 	protected List<Switch> switches= new ArrayList<Switch>();
 	int vmId=0;
-	protected SDNDatacenter datacenter;
+	protected SDNDataCenter datacenter;
 	protected LinkedList<Vm> vmList;
 	protected LinkedList<Arc> arcList;
 	Map<Integer, Arc> flowIdArcTable;
@@ -393,7 +393,7 @@ public abstract class NetworkOperatingSystem extends SimEntity {
 	}
 
 
-	public void setDatacenter(SDNDatacenter dc) {
+	public void setDatacenter(SDNDataCenter dc) {
 		this.datacenter = dc;
 	}
 

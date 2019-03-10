@@ -65,13 +65,16 @@ public class DCNSFog {
 			
 			FogBroker broker = new FogBroker("broker");
 			
+			//1.
 			Application application = createApplication(appId, broker.getId());
 			application.setUserId(broker.getId());
-			
+
+			//2.
 			createFogDevices(broker.getId(), appId);
 			
 			Controller controller = null;
-			
+
+			//3.
 			ModuleMapping moduleMapping = ModuleMapping.createModuleMapping(); // initializing a module mapping
 			for(FogDevice device : fogDevices){
 				if(device.getName().startsWith("m")){ // names of all Smart Cameras start with 'm' 
@@ -84,18 +87,22 @@ public class DCNSFog {
 				moduleMapping.addModuleToDevice("object_detector", "cloud"); // placing all instances of Object Detector module in the Cloud
 				moduleMapping.addModuleToDevice("object_tracker", "cloud"); // placing all instances of Object Tracker module in the Cloud
 			}
-			
+
+			//4.
 			controller = new Controller("master-controller", fogDevices, sensors, 
 					actuators);
 			
 			controller.submitApplication(application, 
 					(CLOUD)?(new ModulePlacementMapping(fogDevices, application, moduleMapping))
 							:(new ModulePlacementEdgewards(fogDevices, sensors, actuators, application, moduleMapping)));
-			
+
+			//5.
 			TimeKeeper.getInstance().setSimulationStartTime(Calendar.getInstance().getTimeInMillis());
 			
+			//6.
 			CloudSim.startSimulation();
 
+			//7.
 			CloudSim.stopSimulation();
 
 			Log.printLine("VRGame finished!");

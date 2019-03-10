@@ -11,8 +11,8 @@ package org.cloudbus.cloudsim.power;
 import java.util.List;
 import java.util.Map;
 
-import org.cloudbus.cloudsim.Datacenter;
-import org.cloudbus.cloudsim.DatacenterCharacteristics;
+import org.cloudbus.cloudsim.DataCenter;
+import org.cloudbus.cloudsim.DataCenterCharacteristics;
 import org.cloudbus.cloudsim.Log;
 import org.cloudbus.cloudsim.Storage;
 import org.cloudbus.cloudsim.Vm;
@@ -23,7 +23,7 @@ import org.cloudbus.cloudsim.core.SimEvent;
 import org.cloudbus.cloudsim.core.predicates.PredicateType;
 
 /**
- * PowerDatacenter is a class that enables simulation of power-aware data centers.
+ * PowerDataCenter is a class that enables simulation of power-aware data centers.
  * 
  * If you are using any algorithms, policies or workload included in the power package please cite
  * the following paper:
@@ -36,7 +36,7 @@ import org.cloudbus.cloudsim.core.predicates.PredicateType;
  * @author Anton Beloglazov
  * @since CloudSim Toolkit 2.0
  */
-public class PowerDatacenter extends Datacenter {
+public class PowerDataCenter extends DataCenter {
 
 	/** The power. */
 	private double power;
@@ -61,9 +61,9 @@ public class PowerDatacenter extends Datacenter {
 	 * @param storageList the storage list
 	 * @throws Exception the exception
 	 */
-	public PowerDatacenter(
+	public PowerDataCenter(
 			String name,
-			DatacenterCharacteristics characteristics,
+			DataCenterCharacteristics characteristics,
 			VmAllocationPolicy vmAllocationPolicy,
 			List<Storage> storageList,
 			double schedulingInterval) throws Exception {
@@ -76,7 +76,7 @@ public class PowerDatacenter extends Datacenter {
 	}
 
 	/**
-	 * Updates processing of each cloudlet running in this PowerDatacenter. It is necessary because
+	 * Updates processing of each cloudlet running in this PowerDataCenter. It is necessary because
 	 * Hosts and VirtualMachines are simple objects, not entities. So, they don't receive events and
 	 * updating cloudlets inside them must be called from the outside.
 	 * 
@@ -247,7 +247,7 @@ public class PowerDatacenter extends Datacenter {
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.cloudbus.cloudsim.Datacenter#processVmMigrate(org.cloudbus.cloudsim.core.SimEvent,
+	 * @see org.cloudbus.cloudsim.DataCenter#processVmMigrate(org.cloudbus.cloudsim.core.SimEvent,
 	 * boolean)
 	 */
 	@Override
@@ -262,7 +262,7 @@ public class PowerDatacenter extends Datacenter {
 
 	/*
 	 * (non-Javadoc)
-	 * @see cloudsim.Datacenter#processCloudletSubmit(cloudsim.core.SimEvent, boolean)
+	 * @see cloudsim.DataCenter#processCloudletSubmit(cloudsim.core.SimEvent, boolean)
 	 */
 	@Override
 	protected void processCloudletSubmit(SimEvent ev, boolean ack) {
@@ -289,9 +289,9 @@ public class PowerDatacenter extends Datacenter {
 	}
 
 	/**
-	 * Checks if PowerDatacenter is in migration.
+	 * Checks if PowerDataCenter is in migration.
 	 * 
-	 * @return true, if PowerDatacenter is in migration
+	 * @return true, if PowerDataCenter is in migration
 	 */
 	protected boolean isInMigration() {
 		boolean result = false;

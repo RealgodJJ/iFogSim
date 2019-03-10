@@ -16,7 +16,7 @@ import java.util.List;
 import org.cloudbus.cloudsim.core.CloudSim;
 
 /**
- * Cloudlet is an extension to the cloudlet. It stores, despite all the information encapsulated in
+ * Cloudlet（在云端执行的任务） is an extension to the cloudlet. It stores, despite all the information encapsulated（封装） in
  * the Cloudlet, the ID of the VM running it.
  * 
  * @author Rodrigo N. Calheiros
@@ -26,51 +26,52 @@ import org.cloudbus.cloudsim.core.CloudSim;
 public class Cloudlet {
 
 	/**
-	 * The User or Broker ID. It is advisable that broker set this ID with its own ID, so that
+	 * TODO:The User or Broker（代理） ID. It is advisable that broker set this ID with its own ID, so that
 	 * CloudResource returns to it after the execution.
 	 **/
 	private int userId;
 
 	/**
-	 * The size of this Cloudlet to be executed in a CloudResource (unit: in MI).
+	 * TODO:The size of this Cloudlet to be executed in a CloudResource (unit: in MI).
 	 */
 	private long cloudletLength;
 
 	/**
-	 * The input file size of this Cloudlet before execution (unit: in byte). in byte = program +
-	 * input data size
+	 * TODO:The input file size of this Cloudlet before execution (unit: in byte). in byte = program +
+	 * input data size(执行之前输入文件大小)
 	 */
 	private final long cloudletFileSize;
 
-	/** The output file size of this Cloudlet after execution (unit: in byte). */
+	/** TODO:The output file size of this Cloudlet after execution (unit: in byte). （执行之后输出文件的大小）*/
 	private final long cloudletOutputSize;
 
 	/** The num of Pe required to execute this job. */
 	private int numberOfPes;
 
-	/** The cloudlet ID. */
+	/** TODO:The cloudlet ID. */
 	private final int cloudletId;
 
 	/** The status of this Cloudlet. */
+	//TODO:有何种状态
 	private int status;
 
 	/** The format of decimal numbers. */
 	private DecimalFormat num;
 
-	/** The time where this Cloudlet completes. */
+	/** TODO:The time where this Cloudlet completes. */
 	private double finishTime;
 
 	/**
-	 * Start time of executing this Cloudlet. With new functionalities, such as CANCEL, PAUSED and
+	 * TODO:Start time of executing this Cloudlet. With new functionalities, such as CANCEL, PAUSED and
 	 * RESUMED, this attribute only stores the latest execution time. Previous execution time are
 	 * ignored.
 	 */
 	private double execStartTime;
 
-	/** The ID of a reservation made for this cloudlet. */
+	/** TODO:The ID of a reservation（保留） made for this cloudlet. 云任务预约ID（资源的ID）*/
 	private int reservationId = -1;
 
-	/** The records the transaction history for this Cloudlet. */
+	/** The records the transaction history for this Cloudlet.是否记录此对象的历史记录 */
 	private final boolean record;
 
 	/** The newline. */
@@ -79,7 +80,7 @@ public class Cloudlet {
 	/** The history. */
 	private StringBuffer history;
 
-	/** The res list. */
+	/** TODO:The res list. */
 	private final List<Resource> resList;
 
 	/** The index. */
@@ -92,40 +93,41 @@ public class Cloudlet {
 	private int netToS;
 
 	// //////////////////////////////////////////
+    //TODO:标志cloudlet的状态
 	// Below are CONSTANTS attributes
-	/** The Cloudlet has been created and added to the CloudletList object. */
+	/** The Cloudlet has been created and added to the CloudletList object.（cloudlet任务被创建并加入到任务队列中） */
 	public static final int CREATED = 0;
 
-	/** The Cloudlet has been assigned to a CloudResource object as planned. */
+	/** The Cloudlet has been assigned to a CloudResource object as planned. （cloudlet任务被按计划分配）*/
 	public static final int READY = 1;
 
-	/** The Cloudlet has moved to a Cloud node. */
+	/** The Cloudlet has moved to a Cloud node.（cloudlet被移送到cloud节点上（VM）） */
 	public static final int QUEUED = 2;
 
-	/** The Cloudlet is in execution in a Cloud node. */
+	/** The Cloudlet is in execution in a Cloud node. （cloudlet在cloud节点上执行）*/
 	public static final int INEXEC = 3;
 
-	/** The Cloudlet has been executed successfully. */
+	/** The Cloudlet has been executed successfully. （cloudlet成功执行完成）*/
 	public static final int SUCCESS = 4;
 
-	/** The Cloudlet is failed. */
+	/** The Cloudlet is failed. （cloudlet执行失败）*/
 	public static final int FAILED = 5;
 
-	/** The Cloudlet has been canceled. */
+	/** The Cloudlet has been canceled. （cloudlet任务取消）*/
 	public static final int CANCELED = 6;
 
 	/**
-	 * The Cloudlet has been paused. It can be resumed by changing the status into <tt>RESUMED</tt>.
+	 * The Cloudlet has been paused. It can be resumed by changing the status into <tt>RESUMED</tt>.（cloudlet任务暂停）
 	 */
 	public static final int PAUSED = 7;
 
-	/** The Cloudlet has been resumed from <tt>PAUSED</tt> state. */
+	/** The Cloudlet has been resumed from <tt>PAUSED</tt> state.（cloudlet任务恢复执行） */
 	public static final int RESUMED = 8;
 
-	/** The cloudlet has failed due to a resource failure. */
+	/** The cloudlet has failed due to a resource failure. （资源故障导致的cloudlet任务失败）*/
 	public static final int FAILED_RESOURCE_UNAVAILABLE = 9;
 
-	/** The vm id. */
+	/** TODO:The vm id. */
 	protected int vmId;
 
 	/** The cost per bw. */
@@ -134,15 +136,15 @@ public class Cloudlet {
 	/** The accumulated bw cost. */
 	protected double accumulatedBwCost;
 
-	// Utilization
+	// Utilization（利用率）
 
-	/** The utilization of cpu model. */
+	/** The utilization of cpu model. （CPU利用模型）*/
 	private UtilizationModel utilizationModelCpu;
 
-	/** The utilization of memory model. */
+	/** The utilization of memory model. （存储器利用模型）*/
 	private UtilizationModel utilizationModelRam;
 
-	/** The utilization of bw model. */
+	/** The utilization of bw model. （带宽利用模型）*/
 	private UtilizationModel utilizationModelBw;
 
 	// Data cloudlet
@@ -155,11 +157,11 @@ public class Cloudlet {
 	 * 
 	 * @param cloudletId the unique ID of this Cloudlet
 	 * @param cloudletLength the length or size (in MI) of this cloudlet to be executed in a
-	 *            PowerDatacenter
+	 *            PowerDataCenter
 	 * @param cloudletFileSize the file size (in byte) of this cloudlet <tt>BEFORE</tt> submitting
-	 *            to a PowerDatacenter
+	 *            to a PowerDataCenter
 	 * @param cloudletOutputSize the file size (in byte) of this cloudlet <tt>AFTER</tt> finish
-	 *            executing by a PowerDatacenter
+	 *            executing by a PowerDataCenter
 	 * @param pesNumber the pes number
 	 * @param utilizationModelCpu the utilization model cpu
 	 * @param utilizationModelRam the utilization model ram
@@ -202,11 +204,11 @@ public class Cloudlet {
 	 * 
 	 * @param cloudletId the unique ID of this cloudlet
 	 * @param cloudletLength the length or size (in MI) of this cloudlet to be executed in a
-	 *            PowerDatacenter
+	 *            PowerDataCenter
 	 * @param cloudletFileSize the file size (in byte) of this cloudlet <tt>BEFORE</tt> submitting
-	 *            to a PowerDatacenter
+	 *            to a PowerDataCenter
 	 * @param cloudletOutputSize the file size (in byte) of this cloudlet <tt>AFTER</tt> finish
-	 *            executing by a PowerDatacenter
+	 *            executing by a PowerDataCenter
 	 * @param record record the history of this object or not
 	 * @param fileList list of files required by this cloudlet
 	 * @param pesNumber the pes number
@@ -253,11 +255,11 @@ public class Cloudlet {
 	 * 
 	 * @param cloudletId the unique ID of this Cloudlet
 	 * @param cloudletLength the length or size (in MI) of this cloudlet to be executed in a
-	 *            PowerDatacenter
+	 *            PowerDataCenter
 	 * @param cloudletFileSize the file size (in byte) of this cloudlet <tt>BEFORE</tt> submitting
-	 *            to a PowerDatacenter
+	 *            to a PowerDataCenter
 	 * @param cloudletOutputSize the file size (in byte) of this cloudlet <tt>AFTER</tt> finish
-	 *            executing by a PowerDatacenter
+	 *            executing by a PowerDataCenter
 	 * @param fileList list of files required by this cloudlet
 	 * @param pesNumber the pes number
 	 * @param utilizationModelCpu the utilization model cpu
@@ -302,11 +304,11 @@ public class Cloudlet {
 	 * 
 	 * @param cloudletId the unique ID of this cloudlet
 	 * @param cloudletLength the length or size (in MI) of this cloudlet to be executed in a
-	 *            PowerDatacenter
+	 *            PowerDataCenter
 	 * @param cloudletFileSize the file size (in byte) of this cloudlet <tt>BEFORE</tt> submitting
-	 *            to a PowerDatacenter
+	 *            to a PowerDataCenter
 	 * @param cloudletOutputSize the file size (in byte) of this cloudlet <tt>AFTER</tt> finish
-	 *            executing by a PowerDatacenter
+	 *            executing by a PowerDataCenter
 	 * @param record record the history of this object or not
 	 * @param pesNumber the pes number
 	 * @param utilizationModelCpu the utilization model cpu
@@ -363,7 +365,7 @@ public class Cloudlet {
 	// ////////////////////// INTERNAL CLASS ///////////////////////////////////
 
 	/**
-	 * Internal class that keeps track Cloudlet's movement in different CloudResources.
+	 * （记录云任务在云资源上的轨迹行为）Internal class that keeps track Cloudlet's movement in different CloudResources.
 	 */
 	public static class Resource {
 
@@ -372,17 +374,17 @@ public class Cloudlet {
 
 		/**
 		 * The time of this Cloudlet resides in a CloudResource (from arrival time until departure
-		 * time).
+		 * time)（cloudlet在云资源中的时间（到达到离开的时间））.
 		 */
 		public double wallClockTime = 0.0;
 
-		/** The total execution time of this Cloudlet in a CloudResource. */
+		/** The total execution time of this Cloudlet in a CloudResource.（cloudlet在云资源中的执行时间） */
 		public double actualCPUTime = 0.0;
 
-		/** Cost per second a CloudResource charge to execute this Cloudlet. */
+		/** Cost per second a CloudResource charge to execute this Cloudlet. （CloudResource执行此Cloudlet的每秒费用。）*/
 		public double costPerSec = 0.0;
 
-		/** Cloudlet's length finished so far. */
+		/** Cloudlet's length finished so far.（Cloudlet当前完成的长度） */
 		public long finishedSoFar = 0;
 
 		/** a CloudResource id. */
@@ -482,7 +484,7 @@ public class Cloudlet {
 	}
 
 	/**
-	 * Gets the waiting time of this cloudlet executed on a resource.
+	 * Gets the waiting time of this cloudlet executed on a resource.（获取在资源上执行此Cloudlet的等待时间，即在执行之前的等待时间。）
 	 * 
 	 * @return the waiting time
 	 * @pre $none
@@ -499,7 +501,7 @@ public class Cloudlet {
 	}
 
 	/**
-	 * Sets the classType or priority of this Cloudlet for scheduling on a resource.
+	 * Sets the classType or priority of this Cloudlet for scheduling on a resource.（设置此Cloudlet的classType或优先级以便在资源上进行调度。）
 	 * 
 	 * @param classType classType of this Cloudlet
 	 * @return <tt>true</tt> if it is successful, <tt>false</tt> otherwise
@@ -711,7 +713,7 @@ public class Cloudlet {
 	}
 
 	/**
-	 * Sets the resource parameters for which this Cloudlet is going to be executed. <br>
+	 * Sets the resource parameters for which this Cloudlet is going to be executed. （设置执行的资源ID和每秒资源开销）<br>
 	 * NOTE: This method <tt>should</tt> be called only by a resource entity, not the user or owner
 	 * of this Cloudlet.
 	 * 
@@ -1259,7 +1261,7 @@ public class Cloudlet {
 	 * 
 	 * @param resourceID the CloudResource ID
 	 * @param costPerCPU the cost running this Cloudlet per second
-	 * @param costPerBw the cost of data transfer to this PowerDatacenter
+	 * @param costPerBw the cost of data transfer to this PowerDataCenter
 	 * @pre resourceID >= 0
 	 * @pre cost > 0.0
 	 * @post $none

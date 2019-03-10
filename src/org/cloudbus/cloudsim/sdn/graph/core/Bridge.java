@@ -16,6 +16,7 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
 
+//json文件转换成Graph
 public class Bridge {
 	
 	private static Node getNode(Graph graph, String name){

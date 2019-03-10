@@ -110,7 +110,7 @@ public class CloudSim {
 	 *            END_OF_SIMULATION signal before issuing terminate signal to other entities
 	 * @param cal starting time for this simulation. If it is <tt>null</tt>, then the time will be
 	 *            taken from <tt>Calendar.getInstance()</tt>
-	 * @param traceFlag <tt>true</tt> if CloudSim trace need to be written
+	 * @param traceFlag <tt>true</tt> if CloudSim trace need to be written（是否需要进行CloudSim跟踪）
 	 * @see gridsim.CloudSimShutdown
 	 * @see CloudInformationService.CloudInformationService
 	 * @pre numUser >= 0
@@ -120,7 +120,7 @@ public class CloudSim {
 		try {
 			initCommonVariable(cal, traceFlag, numUser);
 
-			// create a GIS object
+			// create a CIS object
 			cis = new CloudInformationService("CloudInformationService");
 
 			// set all the above entity IDs
@@ -784,7 +784,8 @@ public class CloudSim {
 						} else {
 							deferred.addEvent(e);
 						}
-					} else {
+					}
+					else {
 						deferred.addEvent(e);
 					}
 				}

@@ -22,7 +22,7 @@ import org.cloudbus.cloudsim.lists.CloudletList;
 import org.cloudbus.cloudsim.lists.VmList;
 
 /**
- * DatacentreBroker represents a broker acting on behalf of a user. It hides VM management, as vm
+ * DatacenterBroker represents a broker acting on behalf of a user. It hides VM management, as vm
  * creation, sumbission of cloudlets to this VMs and destruction of VMs.
  * 
  * @author Rodrigo N. Calheiros
@@ -68,7 +68,7 @@ public class DatacenterBroker extends SimEntity {
 	protected Map<Integer, Integer> vmsToDatacentersMap;
 
 	/** The datacenter characteristics list. */
-	protected Map<Integer, DatacenterCharacteristics> datacenterCharacteristicsList;
+	protected Map<Integer, DataCenterCharacteristics> datacenterCharacteristicsList;
 
 	/**
 	 * Created a new DatacenterBroker object.
@@ -96,7 +96,7 @@ public class DatacenterBroker extends SimEntity {
 		setDatacenterIdsList(new LinkedList<Integer>());
 		setDatacenterRequestedIdsList(new ArrayList<Integer>());
 		setVmsToDatacentersMap(new HashMap<Integer, Integer>());
-		setDatacenterCharacteristicsList(new HashMap<Integer, DatacenterCharacteristics>());
+		setDatacenterCharacteristicsList(new HashMap<Integer, DataCenterCharacteristics>());
 	}
 
 	/**
@@ -173,14 +173,14 @@ public class DatacenterBroker extends SimEntity {
 	}
 
 	/**
-	 * Process the return of a request for the characteristics of a PowerDatacenter.
+	 * Process the return of a request for the characteristics of a PowerDataCenter.
 	 * 
 	 * @param ev a SimEvent object
 	 * @pre ev != $null
 	 * @post $none
 	 */
 	protected void processResourceCharacteristics(SimEvent ev) {
-		DatacenterCharacteristics characteristics = (DatacenterCharacteristics) ev.getData();
+		DataCenterCharacteristics characteristics = (DataCenterCharacteristics) ev.getData();
 		getDatacenterCharacteristicsList().put(characteristics.getId(), characteristics);
 
 		if (getDatacenterCharacteristicsList().size() == getDatacenterIdsList().size()) {
@@ -190,7 +190,7 @@ public class DatacenterBroker extends SimEntity {
 	}
 
 	/**
-	 * Process a request for the characteristics of a PowerDatacenter.
+	 * Process a request for the characteristics of a PowerDataCenter.
 	 * 
 	 * @param ev a SimEvent object
 	 * @pre ev != $null
@@ -198,7 +198,7 @@ public class DatacenterBroker extends SimEntity {
 	 */
 	protected void processResourceCharacteristicsRequest(SimEvent ev) {
 		setDatacenterIdsList(CloudSim.getCloudResourceList());
-		setDatacenterCharacteristicsList(new HashMap<Integer, DatacenterCharacteristics>());
+		setDatacenterCharacteristicsList(new HashMap<Integer, DataCenterCharacteristics>());
 
 		Log.printLine(CloudSim.clock() + ": " + getName() + ": Cloud Resource List received with "
 				+ getDatacenterIdsList().size() + " resource(s)");
@@ -225,11 +225,11 @@ public class DatacenterBroker extends SimEntity {
 			getVmsToDatacentersMap().put(vmId, datacenterId);
 			getVmsCreatedList().add(VmList.getById(getVmList(), vmId));
 			Log.printLine(CloudSim.clock() + ": " + getName() + ": VM #" + vmId
-					+ " has been created in Datacenter #" + datacenterId + ", Host #"
+					+ " has been created in DataCenter #" + datacenterId + ", Host #"
 					+ VmList.getById(getVmsCreatedList(), vmId).getHost().getId());
 		} else {
 			Log.printLine(CloudSim.clock() + ": " + getName() + ": Creation of VM #" + vmId
-					+ " failed in Datacenter #" + datacenterId);
+					+ " failed in DataCenter #" + datacenterId);
 		}
 
 		incrementVmsAcks();
@@ -309,7 +309,7 @@ public class DatacenterBroker extends SimEntity {
 	/**
 	 * Create the virtual machines in a datacenter.
 	 * 
-	 * @param datacenterId Id of the chosen PowerDatacenter
+	 * @param datacenterId Id of the chosen PowerDataCenter
 	 * @pre $none
 	 * @post $none
 	 */
@@ -620,7 +620,7 @@ public class DatacenterBroker extends SimEntity {
 	 * 
 	 * @return the datacenter characteristics list
 	 */
-	protected Map<Integer, DatacenterCharacteristics> getDatacenterCharacteristicsList() {
+	protected Map<Integer, DataCenterCharacteristics> getDatacenterCharacteristicsList() {
 		return datacenterCharacteristicsList;
 	}
 
@@ -630,7 +630,7 @@ public class DatacenterBroker extends SimEntity {
 	 * @param datacenterCharacteristicsList the datacenter characteristics list
 	 */
 	protected void setDatacenterCharacteristicsList(
-			Map<Integer, DatacenterCharacteristics> datacenterCharacteristicsList) {
+			Map<Integer, DataCenterCharacteristics> datacenterCharacteristicsList) {
 		this.datacenterCharacteristicsList = datacenterCharacteristicsList;
 	}
 

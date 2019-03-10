@@ -18,7 +18,7 @@ import org.cloudbus.cloudsim.core.SimEvent;
 import org.cloudbus.cloudsim.core.predicates.PredicateType;
 
 /**
- * This class allows to simulate Root switch which connects Datacenter to external network. It
+ * This class allows to simulate Root switch which connects DataCenter to external network. It
  * interacts with other switches in order to exchange packets.
  * 
  * Please refer to following publication for more details:
@@ -38,9 +38,9 @@ public class RootSwitch extends Switch {
 	 * 
 	 * @param name Name of the switch
 	 * @param level At which level switch is with respect to hosts.
-	 * @param dc Pointer to Datacenter
+	 * @param dc Pointer to DataCenter
 	 */
-	public RootSwitch(String name, int level, NetworkDatacenter dc) {
+	public RootSwitch(String name, int level, NetworkDataCenter dc) {
 		super(name, level, dc);
 		downlinkswitchpktlist = new HashMap<Integer, List<NetworkPacket>>();
 		downlinkswitches = new ArrayList<Switch>();

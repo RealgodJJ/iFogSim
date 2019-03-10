@@ -20,7 +20,7 @@ import org.cloudbus.cloudsim.core.SimEvent;
 import org.cloudbus.cloudsim.core.predicates.PredicateType;
 
 /**
- * This class allows to simulate Edge switch for Datacenter network. It interacts with other
+ * This class allows to simulate Edge switch for DataCenter network. It interacts with other
  * switches in order to exchange packets.
  * 
  * Please refer to following publication for more details:
@@ -41,9 +41,9 @@ public class EdgeSwitch extends Switch {
 	 * 
 	 * @param name Name of the switch
 	 * @param level At which level switch is with respect to hosts.
-	 * @param dc Pointer to Datacenter
+	 * @param dc Pointer to DataCenter
 	 */
-	public EdgeSwitch(String name, int level, NetworkDatacenter dc) {
+	public EdgeSwitch(String name, int level, NetworkDataCenter dc) {
 		super(name, level, dc);
 		hostlist = new HashMap<Integer, NetworkHost>();
 		uplinkswitchpktlist = new HashMap<Integer, List<NetworkPacket>>();

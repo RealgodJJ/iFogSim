@@ -56,6 +56,7 @@ public class NetworkTopology {
 	 * @pre fileName != null
 	 * @post $none
 	 */
+	//TODO:读取拓扑图的函数
 	public static void buildNetworkTopology(String fileName) {
 		Log.printLine("Topology file: " + fileName);
 

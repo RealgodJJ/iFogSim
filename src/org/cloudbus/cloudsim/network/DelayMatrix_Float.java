@@ -95,7 +95,7 @@ public class DelayMatrix_Float {
 			mDelayMatrix[edge.getSrcNodeID()][edge.getDestNodeID()] = edge.getLinkDelay();
 
 			if (!directed) {
-				// according to aproximity of symmetry to all kommunication-paths
+				// according to aproximity of symmetry to all communication-paths(根据所有通信路径的对称性)
 				mDelayMatrix[edge.getDestNodeID()][edge.getSrcNodeID()] = edge.getLinkDelay();
 			}
 

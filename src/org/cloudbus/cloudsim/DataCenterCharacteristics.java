@@ -15,7 +15,7 @@ import org.cloudbus.cloudsim.lists.HostList;
 import org.cloudbus.cloudsim.lists.PeList;
 
 /**
- * DatacenterCharacteristics represents static properties of a resource such as resource
+ * DataCenterCharacteristics represents static properties of a resource such as resource
  * architecture, Operating System (OS), management policy (time- or space-shared), cost and time
  * zone at which the resource is located along resource configuration.
  * 
@@ -25,7 +25,7 @@ import org.cloudbus.cloudsim.lists.PeList;
  * @author Anton Beloglazov
  * @since CloudSim Toolkit 1.0
  */
-public class DatacenterCharacteristics {
+public class DataCenterCharacteristics {
 
 	/** The resource id -- setup when Resource is created. */
 	private int id;
@@ -79,7 +79,7 @@ public class DatacenterCharacteristics {
 	private double costPerBw;
 
 	/**
-	 * Allocates a new DatacenterCharacteristics object. If the time zone is invalid, then by
+	 * Allocates a new DataCenterCharacteristics object. If the time zone is invalid, then by
 	 * default, it will be GMT+0.
 	 * 
 	 * @param architecture the architecture of a resource
@@ -102,7 +102,7 @@ public class DatacenterCharacteristics {
 	 * @pre costPerStorage >= 0
 	 * @post $none
 	 */
-	public DatacenterCharacteristics(
+	public DataCenterCharacteristics(
 			String architecture,
 			String os,
 			String vmm,
@@ -216,15 +216,15 @@ public class DatacenterCharacteristics {
 		int mips = 0;
 		switch (getAllocationPolicy()) {
 		// Assuming all PEs in all Machine have same rating.
-			case DatacenterCharacteristics.TIME_SHARED:
-			case DatacenterCharacteristics.OTHER_POLICY_SAME_RATING:
+			case DataCenterCharacteristics.TIME_SHARED:
+			case DataCenterCharacteristics.OTHER_POLICY_SAME_RATING:
 				mips = getMipsOfOnePe() * HostList.getNumberOfPes(getHostList());
 				break;
 
 			// Assuming all PEs in a given Machine have the same rating.
 			// But different machines in a Cluster can have different rating
-			case DatacenterCharacteristics.SPACE_SHARED:
-			case DatacenterCharacteristics.OTHER_POLICY_DIFFERENT_RATING:
+			case DataCenterCharacteristics.SPACE_SHARED:
+			case DataCenterCharacteristics.OTHER_POLICY_DIFFERENT_RATING:
 				for (Host host : getHostList()) {
 					mips += host.getTotalMips();
 				}
@@ -252,7 +252,7 @@ public class DatacenterCharacteristics {
 		double cpuTime = 0.0;
 
 		switch (getAllocationPolicy()) {
-			case DatacenterCharacteristics.TIME_SHARED:
+			case DataCenterCharacteristics.TIME_SHARED:
 				cpuTime = cloudletLength / (getMipsOfOnePe() * (1.0 - load));
 				break;
 

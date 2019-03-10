@@ -18,7 +18,7 @@ import org.cloudbus.cloudsim.provisioners.RamProvisioner;
 /**
  * Host executes actions related to management of virtual machines (e.g., creation and destruction).
  * A host has a defined policy for provisioning memory and bw, as well as an allocation policy for
- * Pe's to virtual machines. A host is associated to a datacenter. It can host virtual machines.
+ * Pe's to virtual machines. A host is associated to a dataCenter. It can host virtual machines.
  * 
  * @author Rodrigo N. Calheiros
  * @author Anton Beloglazov
@@ -53,8 +53,8 @@ public class Host {
 	/** The vms migrating in. */
 	private final List<Vm> vmsMigratingIn = new ArrayList<Vm>();
 
-	/** The datacenter where the host is placed. */
-	private Datacenter datacenter;
+	/** The dataCenter where the host is placed. */
+	private DataCenter dataCenter;
 
 	/**
 	 * Instantiates a new host.
@@ -605,17 +605,17 @@ public class Host {
 	 * 
 	 * @return the data center where the host runs
 	 */
-	public Datacenter getDatacenter() {
-		return datacenter;
+	public DataCenter getDataCenter() {
+		return dataCenter;
 	}
 
 	/**
 	 * Sets the data center.
 	 * 
-	 * @param datacenter the data center from this host
+	 * @param dataCenter the data center from this host
 	 */
-	public void setDatacenter(Datacenter datacenter) {
-		this.datacenter = datacenter;
+	public void setDataCenter(DataCenter dataCenter) {
+		this.dataCenter = dataCenter;
 	}
 
 }
