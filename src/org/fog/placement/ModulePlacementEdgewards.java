@@ -371,7 +371,7 @@ public class ModulePlacementEdgewards extends ModulePlacement{
 	/**
 	 * Get all modules that need to be shifted northwards along with <b>modules</b>.
 	 * Typically, these other modules are those that are hosted on device with ID <b>deviceId</b> and lie upstream of modules in <b>modules</b> in application model.
-	 * @param module the module that needs to be shifted northwards
+	 * @param modules the module that needs to be shifted northwards
 	 * @param deviceId the fog device ID that it is currently on
 	 * @return list of all modules that need to be shifted north along with <b>modules</b>
 	 */

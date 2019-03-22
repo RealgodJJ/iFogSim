@@ -71,6 +71,7 @@ public class Controller extends SimEntity{
 	public void startEntity() {
 		for(String appId : applications.keySet()){
 			if(getAppLaunchDelays().get(appId)==0)
+				//任务的开端所以延时为0
 				processAppSubmit(applications.get(appId));
 			else
 				send(getId(), getAppLaunchDelays().get(appId), FogEvents.APP_SUBMIT, applications.get(appId));
@@ -140,6 +141,8 @@ public class Controller extends SimEntity{
 		}
 		return null;
 	}
+
+
 	private void printTimeDetails() {
 		System.out.println("=========================================");
 		System.out.println("============== RESULTS ==================");
@@ -216,7 +219,8 @@ public class Controller extends SimEntity{
 		Application app = (Application) ev.getData();
 		processAppSubmit(app);
 	}
-	
+
+	//处理整体应用的开端
 	private void processAppSubmit(Application application){
 		System.out.println(CloudSim.clock()+" Submitted application "+ application.getAppId());
 		FogUtils.appIdToGeoCoverageMap.put(application.getAppId(), application.getGeoCoverage());

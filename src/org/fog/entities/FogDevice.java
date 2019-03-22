@@ -30,13 +30,7 @@ import org.fog.application.AppModule;
 import org.fog.application.Application;
 import org.fog.policy.AppModuleAllocationPolicy;
 import org.fog.scheduler.StreamOperatorScheduler;
-import org.fog.utils.Config;
-import org.fog.utils.FogEvents;
-import org.fog.utils.FogUtils;
-import org.fog.utils.Logger;
-import org.fog.utils.ModuleLaunchConfig;
-import org.fog.utils.NetworkUsageMonitor;
-import org.fog.utils.TimeKeeper;
+import org.fog.utils.*;
 
 public class FogDevice extends PowerDataCenter {
     protected Queue<Tuple> northTupleQueue;
@@ -144,6 +138,23 @@ public class FogDevice extends PowerDataCenter {
         setTotalCost(0);
         setModuleInstanceCount(new HashMap<String, Map<String, Integer>>());
         setChildToLatencyMap(new HashMap<Integer, Double>());
+
+        //TODO:添加FogDevice信息的打印
+        System.out.println("name:" + name + System.lineSeparator() +
+                "mips: " + characteristics.getHostList().get(0).getPeList().get(0).getPeProvisioner().getMips() + System.lineSeparator() +
+                "ram: " + characteristics.getHostList().get(0).getRamProvisioner().getRam() + System.lineSeparator() +
+                "upBw:" + uplinkBandwidth + System.lineSeparator() +
+                "downBw:" + downlinkBandwidth + System.lineSeparator() +
+                "level:" + level + System.lineSeparator() +
+                "ratePerMips:" + ratePerMips + System.lineSeparator() +
+                "busyPower: " + ((FogLinearPowerModel) ((PowerHost) characteristics.getHostList().get(0)).getPowerModel()).getMaxPower() + System.lineSeparator() +
+                "idlePower: " + ((FogLinearPowerModel) ((PowerHost) characteristics.getHostList().get(0)).getPowerModel()).getStaticPower() +
+                System.lineSeparator());
+    }
+
+    @Override
+    public String toString() {
+        return "";
     }
 
     public FogDevice(
@@ -232,7 +243,7 @@ public class FogDevice extends PowerDataCenter {
 
     /**
      * Overrides this method when making a new and different type of resource. <br>
-     * <b>NOTE:</b> You do not need to override {@link #body()} method, if you use this method.
+     * <b>NOTE:</b> You do not need to override method, if you use this method.
      *
      * @pre $none
      * @post $none
