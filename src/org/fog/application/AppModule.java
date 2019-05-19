@@ -22,12 +22,18 @@ public class AppModule extends PowerVm{
 	private String name;
 	private String appId;
 	private Map<Pair<String, String>, SelectivityModel> selectivityMap;
-	
+
+	//专利：最大延迟容忍时间dtk
+    private double toleranceTime;
+    //专利：任务的计算量Wtk
+    private double calculateAmount;
+
 	/**
-	 * A map from the AppModules sending tuples UP to this module to their instance IDs.
-	 * If a new instance ID is detected, the number of instances is incremented.  
-	 */
-	private Map<String, List<Integer>> downInstanceIdsMaps;
+     * A map from the AppModules sending tuples UP to this module to their instance IDs.
+     * If a new instance ID is detected, the number of instances is incremented.
+     */
+	//模块(String)传入到该模块的次数(Integer)中
+    private Map<String, List<Integer>> downInstanceIdsMaps;
 	
 	/**
 	 * Number of instances of this module
@@ -51,14 +57,15 @@ public class AppModule extends PowerVm{
 			String vmm,
 			CloudletScheduler cloudletScheduler,
 			Map<Pair<String, String>, SelectivityModel> selectivityMap) {
-		super(id, userId, mips, 1, ram, bw, size, 1, vmm, cloudletScheduler, 300);
+
+	    super(id, userId, mips, 2, ram, bw, size, 1, vmm, cloudletScheduler, 300);
 		setName(name);
 		setId(id);
 		setAppId(appId);
 		setUserId(userId);
 		setUid(getUid(userId, id));
 		setMips(mips);
-		setNumberOfPes(1);
+		setNumberOfPes(2);
 		setRam(ram);
 		setBw(bw);
 		setSize(size);
@@ -107,7 +114,24 @@ public class AppModule extends PowerVm{
 	public void setSelectivityMap(Map<Pair<String, String>, SelectivityModel> selectivityMap) {
 		this.selectivityMap = selectivityMap;
 	}
-	public String getAppId() {
+
+    public double getToleranceTime() {
+        return toleranceTime;
+    }
+
+    public void setToleranceTime(double toleranceTime) {
+        this.toleranceTime = toleranceTime;
+    }
+
+    public double getCalculateAmount() {
+        return calculateAmount;
+    }
+
+    public void setCalculateAmount(double calculateAmount) {
+        this.calculateAmount = calculateAmount;
+    }
+
+    public String getAppId() {
 		return appId;
 	}
 	public void setAppId(String appId) {

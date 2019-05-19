@@ -42,7 +42,6 @@ public class FogDevice extends PowerDataCenter {
     protected Map<String, List<String>> appToModulesMap;
     protected Map<Integer, Double> childToLatencyMap;
 
-
     protected Map<Integer, Integer> cloudTrafficMap;
 
     protected double lockTime;
@@ -56,6 +55,9 @@ public class FogDevice extends PowerDataCenter {
      * ID of the Controller
      */
     protected int controllerId;
+
+    //TODO：（添加了相邻的边缘节点）IDs of the friends Fog Devices
+    protected List<Integer> neighborIds;
     /**
      * IDs of the children Fog devices
      */
@@ -76,7 +78,7 @@ public class FogDevice extends PowerDataCenter {
     protected double uplinkBandwidth;
     protected double downlinkBandwidth;
     protected double uplinkLatency;
-    protected List<Pair<Integer, Double>> associatedActuatorIds; //Pair可以返回一个键值对
+    protected List<Pair<Integer, Double>> associatedActuatorIds; //Pair可以返回一个键值对(<actuatorId, delay>)
 
     protected double energyConsumption;
     protected double lastUtilizationUpdateTime;
@@ -125,7 +127,7 @@ public class FogDevice extends PowerDataCenter {
         setNorthLinkBusy(false);
         setSouthLinkBusy(false);
 
-
+        setNeighborIds(new ArrayList<Integer>());
         setChildrenIds(new ArrayList<Integer>());
         setChildToOperatorsMap(new HashMap<Integer, List<String>>());
 
@@ -226,7 +228,7 @@ public class FogDevice extends PowerDataCenter {
         setNorthLinkBusy(false);
         setSouthLinkBusy(false);
 
-
+        setNeighborIds(new ArrayList<Integer>());
         setChildrenIds(new ArrayList<Integer>());
         setChildToOperatorsMap(new HashMap<Integer, List<String>>());
 
@@ -511,6 +513,16 @@ public class FogDevice extends PowerDataCenter {
         }
     }
 
+//    protected int getFriendIdWithRouteTo(int targetDeviceId) {
+//        for (Integer friendId : getNeighborIds()) {
+//            if (targetDeviceId == friendId)
+//                return friendId;
+//            if (((FogDevice)CloudSim.getEntity(friendId)).getFriendIdWithRouteTo(targetDeviceId) != -1)
+//                return friendId;
+//        }
+//        return -1;
+//    }
+
     protected int getChildIdWithRouteTo(int targetDeviceId) {
         for (Integer childId : getChildrenIds()) {
             if (targetDeviceId == childId)
@@ -565,9 +577,12 @@ public class FogDevice extends PowerDataCenter {
             totalMipsAllocated += getHost().getTotalAllocatedMipsForVm(vm);
         }
 
+        //TODO:能耗计算需要修改，加入在传输链路上的功耗
         double timeNow = CloudSim.clock();
         double currentEnergyConsumption = getEnergyConsumption();
-        double newEnergyConsumption = currentEnergyConsumption + (timeNow - lastUtilizationUpdateTime) * getHost().getPowerModel().getPower(lastUtilization);
+        double newEnergyConsumption = currentEnergyConsumption + (timeNow - lastUtilizationUpdateTime)
+                * getHost().getPowerModel().getPower(lastUtilization);
+//        System.out.println("id: " + getHost().getId() + "\nnew energy consumption: " + newEnergyConsumption);
         setEnergyConsumption(newEnergyConsumption);
 
 		/*if(getName().equals("d-0")){
@@ -632,7 +647,7 @@ public class FogDevice extends PowerDataCenter {
         }
     }
 
-    // 接受从Sensor模块传来的元组
+    // 接收传来的元组
     protected void processTupleArrival(SimEvent ev) {
         Tuple tuple = (Tuple) ev.getData();
 
@@ -645,6 +660,10 @@ public class FogDevice extends PowerDataCenter {
 		}*/
         Logger.debug(getName(), "Received tuple " + tuple.getCloudletId() + "with tupleType = " + tuple.getTupleType() + "\t| Source : " +
                 CloudSim.getEntityName(ev.getSource()) + "|Dest : " + CloudSim.getEntityName(ev.getDestination()));
+
+        //TODO:消息传递打印
+//        System.out.println(getName() + ":\nReceived tuple " + tuple.getCloudletId() + " with tupleType = " + tuple.getTupleType() + " | Source : " +
+//                CloudSim.getEntityName(ev.getSource()) + " |Dest : " + CloudSim.getEntityName(ev.getDestination()));
         send(ev.getSource(), CloudSim.getMinTimeBetweenEvents(), FogEvents.TUPLE_ACK);
 
         if (FogUtils.appIdToGeoCoverageMap.containsKey(tuple.getAppId())) {
@@ -708,6 +727,10 @@ public class FogDevice extends PowerDataCenter {
             else if (tuple.getDirection() == Tuple.DOWN) {
                 for (int childId : getChildrenIds())
                     sendDown(tuple, childId);
+            } else if (tuple.getDirection() == Tuple.NEIGHBOR) {
+                //TODO
+                for (int neighborId : getNeighborIds())
+                    sendNext(tuple, neighborId);
             }
         }
     }
@@ -762,6 +785,9 @@ public class FogDevice extends PowerDataCenter {
                 instances = Math.max(module.getDownInstanceIdsMaps().get(_moduleName).size(), instances);
             }
             module.setNumInstances(instances);
+        } else if (tuple.getDirection() == Tuple.NEIGHBOR) {
+            String srcModule = tuple.getSrcModuleName();
+            //TODO：tuple 发送到周围的邻接边缘节点中执行
         }
 
         TimeKeeper.getInstance().tupleStartedExecution(tuple);
@@ -862,6 +888,12 @@ public class FogDevice extends PowerDataCenter {
         }
     }
 
+    //TODO：发送给周围的节点
+    protected void sendNext(Tuple tuple, int neighborId) {
+        if (getNeighborIds().contains(neighborId)) {
+
+        }
+    }
 
     protected void sendToSelf(Tuple tuple) {
         send(getId(), CloudSim.getMinTimeBetweenEvents(), FogEvents.TUPLE_ARRIVAL, tuple);
@@ -877,6 +909,14 @@ public class FogDevice extends PowerDataCenter {
 
     public void setParentId(int parentId) {
         this.parentId = parentId;
+    }
+
+    public List<Integer> getNeighborIds() {
+        return neighborIds;
+    }
+
+    public void setNeighborIds(List<Integer> neighborIds) {
+        this.neighborIds = neighborIds;
     }
 
     public List<Integer> getChildrenIds() {

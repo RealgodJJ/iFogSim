@@ -8,9 +8,12 @@ import org.cloudbus.cloudsim.UtilizationModel;
 
 public class Tuple extends Cloudlet{
 
+    //Direction分为以下四种
 	public static final int UP = 1;
 	public static final int DOWN = 2;
 	public static final int ACTUATOR = 3;
+	//TODO：添加邻居节点传输的方式
+	public static final int NEIGHBOR = 4;
 	
 	private String appId;
 	

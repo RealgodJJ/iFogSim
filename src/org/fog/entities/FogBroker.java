@@ -22,6 +22,8 @@ public class FogBroker extends PowerDatacenterBroker{
 		
 	}
 
+
+
 	@Override
 	public void shutdownEntity() {
 		// TODO Auto-generated method stub

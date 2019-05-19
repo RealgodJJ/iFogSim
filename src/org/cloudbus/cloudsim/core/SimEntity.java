@@ -516,7 +516,7 @@ public abstract class SimEntity implements Cloneable {
 	 * @pre data != null
 	 * @post $none
 	 */
-	protected void send(int entityId, double delay, int cloudSimTag, Object data) {
+	protected void  send(int entityId, double delay, int cloudSimTag, Object data) {
 		if (entityId < 0) {
 			return;
 		}

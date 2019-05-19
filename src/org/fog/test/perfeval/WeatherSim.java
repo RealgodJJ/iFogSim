@@ -145,7 +145,7 @@ public class WeatherSim {
 //        sensors.add(tempSensor);
         Sensor humidSensor = new Sensor("s-" + id, "FOGDEVICE", userId, appId, new DeterministicDistribution(5)); // inter-transmission time of camera (sensor) follows a deterministic distribution
         sensors.add(humidSensor);
-        Actuator calculate = new Actuator("act-" + id, userId, appId, "ACT_CALCULATE");
+        Actuator calculate = new Actuator("act-" + id, userId, appId, "PTZ_CALCULATE");
         actuators.add(calculate);
 //        tempSensor.setGatewayDeviceId(edgeDevice.getId());
         humidSensor.setGatewayDeviceId(edgeDevice.getId());
@@ -238,20 +238,20 @@ public class WeatherSim {
          */
         application.addAppModule("weather_detector", 10);
         application.addAppModule("humid_detector", 10);
-        application.addAppModule("temp_detector", 10);
+//        application.addAppModule("temp_detector", 10);
         application.addAppModule("user_interface", 10);
 
         /*
          * Connecting the application modules (vertices) in the application model (directed graph) with edges
          */
         application.addAppEdge("FOGDEVICE", "weather_detector", 1000,
-                20000, "WEATHER_STREAM", Tuple.UP, AppEdge.SENSOR);
+                20000, "FOGDEVICE", Tuple.UP, AppEdge.SENSOR);
         application.addAppEdge("weather_detector", "humid_detector", 2000,
-                2000, "HUMID_STREAM", Tuple.UP, AppEdge.MODULE);
+                2000, "WEATHER_STREAM", Tuple.UP, AppEdge.MODULE);
 //        application.addAppEdge("weather_detector", "temp_detector", 1000,
 //                1000, "TEMP_STREAM", Tuple.UP, AppEdge.MODULE);
         application.addAppEdge("humid_detector", "user_interface", 500,
-                2000, "HUMID_SHOW", Tuple.UP, AppEdge.MODULE);
+                2000, "HUMID_STREAM", Tuple.UP, AppEdge.MODULE);
 //        application.addAppEdge("temp_detector", "user_interface", 250,
 //                1000, "TEMP_SHOW", Tuple.UP, AppEdge.MODULE);
         application.addAppEdge("humid_detector", "PTZ_CALCULATE", 100, 28,
@@ -262,9 +262,9 @@ public class WeatherSim {
         /*
          * Defining the input-output relationships (represented by selectivity) of the application modules.
          */
-        application.addTupleMapping("weather_detector", "WEATHER_STREAM", "HUMID_STREAM", new FractionalSelectivity(1.0));
+        application.addTupleMapping("weather_detector", "FOGDEVICE", "WEATHER_STREAM", new FractionalSelectivity(1.0));
 //        application.addTupleMapping("weather_detector", "WEATHER_STREAM", "TEMP_STREAM", new FractionalSelectivity(1.0));
-        application.addTupleMapping("humid_detector", "HUMID_STREAM", "HUMID_SHOW", new FractionalSelectivity(0.05));
+        application.addTupleMapping("humid_detector", "WEATHER_STREAM", "HUMID_STREAM", new FractionalSelectivity(0.05));
 //        application.addTupleMapping("temp_detector", "TEMP_STREAM", "TEMP_SHOW", new FractionalSelectivity(0.05));
 
         /*
@@ -275,18 +275,18 @@ public class WeatherSim {
             add("weather_detector");
             add("humid_detector");
         }});
-        final AppLoop loop2 = new AppLoop(new ArrayList<String>() {{
-            add("weather_detector");
-            add("temp_detector");
-        }});
+//        final AppLoop loop2 = new AppLoop(new ArrayList<String>() {{
+//            add("weather_detector");
+//            add("temp_detector");
+//        }});
         final AppLoop loop3 = new AppLoop(new ArrayList<String>() {{
             add("humid_detector");
             add("PTZ_CALCULATE");
         }});
-        final AppLoop loop4 = new AppLoop(new ArrayList<String>() {{
-            add("temp_detector");
-            add("PTZ_CALCULATE");
-        }});
+//        final AppLoop loop4 = new AppLoop(new ArrayList<String>() {{
+//            add("temp_detector");
+//            add("PTZ_CALCULATE");
+//        }});
         List<AppLoop> loops = new ArrayList<AppLoop>() {{
             add(loop1);
 //            add(loop2);

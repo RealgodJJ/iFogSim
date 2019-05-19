@@ -6,7 +6,8 @@ package org.fog.application;
  *
  */
 public class AppEdge {
-	
+
+	//EdgeType分为以下三种
 	public static final int SENSOR = 1; // App Edge originates from a sensor
 	public static final int ACTUATOR = 2; // App Edge leads to an actuator
 	public static final int MODULE = 3; // App Edge is between application modules
@@ -26,6 +27,7 @@ public class AppEdge {
 	/**
 	 * Network length (in bytes) of tuples carried by the application edge
 	 */
+	//专利：AppModule之间的数据传输量
 	private double tupleNwLength;
 	/**
 	 * Type of tuples carried by the application edge
