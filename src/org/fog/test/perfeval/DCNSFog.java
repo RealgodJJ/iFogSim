@@ -1,7 +1,9 @@
 package org.fog.test.perfeval;
 
+import java.math.BigDecimal;
 import java.util.*;
 
+import com.sun.javafx.collections.MappingChange;
 import org.cloudbus.cloudsim.Host;
 import org.cloudbus.cloudsim.Log;
 import org.cloudbus.cloudsim.Pe;
@@ -38,11 +40,15 @@ import org.fog.utils.distribution.DeterministicDistribution;
  * @author Harshit Gupta
  */
 public class DCNSFog {
-    static List<FogDevice> fogDevices = new ArrayList<FogDevice>();
-    static List<Sensor> sensors = new ArrayList<Sensor>();
-    static List<Actuator> actuators = new ArrayList<Actuator>();
-    static int numOfAreas = 1;
-    static int numOfCamerasPerArea = 3;
+    private static List<FogDevice> fogDevices = new ArrayList<FogDevice>();
+    private static List<Sensor> sensors = new ArrayList<Sensor>();
+    private static List<Actuator> actuators = new ArrayList<Actuator>();
+    private static List<FogDevice> cameraList = new ArrayList<>();
+    private static int numOfAreas = 1;
+    private static int numOfCamerasPerArea = 3;
+
+    //用于暂存每个边缘节点的邻居节点和延时之间的映射
+    private static Map<Integer, Double> neighborLatency;
 
     private static boolean CLOUD = false;
 
@@ -52,17 +58,18 @@ public class DCNSFog {
 
         try {
             Log.disable();
+            //1.初始化CloudSim工具包，它应该在创建任何实体之前调用
             int num_user = 1; // number of cloud users
             Calendar calendar = Calendar.getInstance();
             boolean trace_flag = false; // mean trace events
-
             CloudSim.init(num_user, calendar, trace_flag);
 
-            String appId = "dcns"; // identifier of the application
 
+            //2.为应用设置名称并创建数据中心
+            String appId = "dcns"; // identifier of the application
             FogBroker broker = new FogBroker("broker");
 
-            //1.
+            //3.创建应用
             Application application = createApplication(appId, broker.getId());
             application.setUserId(broker.getId());
 
@@ -130,10 +137,10 @@ public class DCNSFog {
     }
 
     private static FogDevice addArea(String id, int userId, String appId, int parentId) {
-        FogDevice router = createFogDevice("d-" + id, 2800, 4000, 10000, 10000, 1, 0.0, 107.339, 83.4333);
+        //邻居节点之间的传输带宽为5000
+        FogDevice router = createFogDevice("d-" + id, 2800, 4000, 10000, 10000, 5000, 1, 0.0, 107.339, 83.4333);
         fogDevices.add(router);
         router.setUplinkLatency(2); // latency of connection between router and proxy server is 2 ms
-        List<FogDevice> cameraList = new ArrayList<>();
         for (int i = 0; i < numOfCamerasPerArea; i++) {
             String mobileId = id + "-" + i;
             FogDevice camera = addCamera(mobileId, userId, appId, router.getId()); // adding a smart camera to the physical topology. Smart cameras have been modeled as fog devices as well.
@@ -142,21 +149,44 @@ public class DCNSFog {
             cameraList.add(camera);
         }
         //TODO:创建一个FogDevice的Id到FogDevice的List的映射
+        //<fogDeviceId, List<neighborFogDevice>>
         Map<String, List<FogDevice>> cameraNeighborList = new HashMap<>();
         for (int i = 0; i < cameraList.size(); i++) {
             String nodeName = cameraList.get(i).getName();
             List<FogDevice> neighborList = new ArrayList<>();
+            List<Integer> neighborListId = new ArrayList<>();
             neighborList.addAll(cameraList);
             neighborList.remove(i);
             cameraNeighborList.put(nodeName, neighborList);
+
+            for (FogDevice neighbor : neighborList) {
+                neighborListId.add(neighbor.getId());
+            }
+            cameraList.get(i).setNeighborIds(neighborListId);
+        }
+
+        //TODO: 创建邻居节点之间的延迟设置
+        for (int i = 0; i < cameraList.size(); i++) {
+            neighborLatency = new HashMap<>();
+            //利用当前节点名称寻找邻居节点列表，遍历邻居节点
+            List<FogDevice> neighborList = cameraNeighborList.get(cameraList.get(i).getName());
+            for (int j = 0; j < neighborList.size(); j++) {
+                double latency = Math.random() * 2 + 2.0;
+                BigDecimal b = new BigDecimal(latency);
+//                neighborLatency.put(j, b.setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
+                neighborLatency.put(neighborList.get(j).getId(), b.setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
+            }
+            cameraList.get(i).setNeighborLatency(neighborLatency);
         }
 
         for (String cameraId : cameraNeighborList.keySet()) {
             System.out.println("[" + cameraId + "]:");
             for (int j = 0; j < cameraNeighborList.size() - 1; j++) {
-                System.out.println(cameraNeighborList.get(cameraId).get(j).getName());
+                System.out.println(cameraNeighborList.get(cameraId).get(j).getName() + ": "
+                        + cameraNeighborList.get(cameraId).get(j).getNeighborLatency().get(j));
             }
         }
+
         router.setParentId(parentId);
         return router;
     }
@@ -189,9 +219,9 @@ public class DCNSFog {
      * @param idlePower
      * @return
      */
-    private static FogDevice createFogDevice(String nodeName, long mips,
-                                             int ram, long upBw, long downBw, int level, double ratePerMips, double busyPower, double idlePower) {
-
+    //第一种调用方法
+    private static FogDevice createFogDevice(String nodeName, long mips, int ram, long upBw, long downBw, int level,
+                                             double ratePerMips, double busyPower, double idlePower) {
         List<Pe> peList = new ArrayList<Pe>();
 
         // 3. Create PEs and add these into a list.
@@ -201,15 +231,9 @@ public class DCNSFog {
         long storage = 1000000; // host storage
         int bw = 10000;
 
-        PowerHost host = new PowerHost(
-                hostId,
-                new RamProvisionerSimple(ram),
-                new BwProvisionerOverbooking(bw),
-                storage,
-                peList,
-                new StreamOperatorScheduler(peList),
-                new FogLinearPowerModel(busyPower, idlePower)
-        );
+        //相对于Host加入了功耗计算的模型
+        PowerHost host = new PowerHost(hostId, new RamProvisionerSimple(ram), new BwProvisionerOverbooking(bw), storage,
+                peList, new StreamOperatorScheduler(peList), new FogLinearPowerModel(busyPower, idlePower));
 
         List<Host> hostList = new ArrayList<Host>();
         hostList.add(host);
@@ -233,7 +257,59 @@ public class DCNSFog {
         FogDevice fogdevice = null;
         try {
             fogdevice = new FogDevice(nodeName, characteristics,
-                    new AppModuleAllocationPolicy(hostList), storageList, 10, upBw, downBw, 0, ratePerMips);
+                    new AppModuleAllocationPolicy(hostList), storageList, 10, upBw, downBw,
+                    0, ratePerMips);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        fogdevice.setLevel(level);
+        return fogdevice;
+    }
+
+    //第二种调用方法（同层创建邻居节点）
+    private static FogDevice createFogDevice(String nodeName, long mips, int ram, long upBw, long downBw,
+                                             long neighborBw, int level, double ratePerMips, double busyPower,
+                                             double idlePower) {
+        List<Pe> peList = new ArrayList<Pe>();
+
+        // 3. Create PEs and add these into a list.
+        peList.add(new Pe(0, new PeProvisionerOverbooking(mips))); // need to store Pe id and MIPS Rating
+
+        int hostId = FogUtils.generateEntityId();
+        long storage = 1000000; // host storage
+        int bw = 10000;
+
+        //相对于Host加入了功耗计算的模型
+        PowerHost host = new PowerHost(hostId, new RamProvisionerSimple(ram), new BwProvisionerOverbooking(bw), storage,
+                peList, new StreamOperatorScheduler(peList), new FogLinearPowerModel(busyPower, idlePower));
+
+        List<Host> hostList = new ArrayList<Host>();
+        hostList.add(host);
+
+        String arch = "x86"; // system architecture
+        String os = "Linux"; // operating system
+        String vmm = "Xen";
+        double time_zone = 10.0; // time zone this resource located
+        double cost = 3.0; // the cost of using processing in this resource
+        double costPerMem = 0.05; // the cost of using memory in this resource
+        double costPerStorage = 0.001; // the cost of using storage in this
+        // resource
+        double costPerBw = 0.0; // the cost of using bw in this resource
+        LinkedList<Storage> storageList = new LinkedList<Storage>(); // we are not adding SAN
+        // devices by now
+
+        FogDeviceCharacteristics characteristics = new FogDeviceCharacteristics(
+                arch, os, vmm, host, time_zone, cost, costPerMem,
+                costPerStorage, costPerBw);
+
+        FogDevice fogdevice = null;
+        //TODO：添加邻居节点之间的延迟
+        Map<Integer, Double> myNeighborLatency = new HashMap<>();
+        try {
+            fogdevice = new FogDevice(nodeName, characteristics,
+                    new AppModuleAllocationPolicy(hostList), storageList, 10, upBw, downBw, neighborBw,
+                    0, myNeighborLatency, ratePerMips);
         } catch (Exception e) {
             e.printStackTrace();
         }

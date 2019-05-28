@@ -22,14 +22,13 @@ public class FogBroker extends PowerDatacenterBroker{
 		
 	}
 
-
-
 	@Override
 	public void shutdownEntity() {
 		// TODO Auto-generated method stub
 		
 	}
-	
-	
 
+	public void allocateWithEvaluate() {
+		//TODO: Add the allocation about my idea
+	}
 }

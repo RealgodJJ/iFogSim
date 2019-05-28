@@ -75,7 +75,7 @@ public class TestForAllocation {
             broker.submitCloudletList(cloudletList);
 
             //使用贪心策略
-            broker.bindCloudletToVmsTimeAwared();
+            broker.bindCloudletToVmsSimple();
 
             //Six steps: 开始模拟
             CloudSim.startSimulation();

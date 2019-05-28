@@ -8,7 +8,6 @@
 
 package org.cloudbus.cloudsim;
 
-import java.nio.file.ClosedDirectoryStreamException;
 import java.util.*;
 
 import org.cloudbus.cloudsim.core.CloudSim;

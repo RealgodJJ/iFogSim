@@ -34,13 +34,19 @@ import org.fog.utils.*;
 
 public class FogDevice extends PowerDataCenter {
     protected Queue<Tuple> northTupleQueue;
+    //向下传传输的对列<tuple, childId>
     protected Queue<Pair<Tuple, Integer>> southTupleQueue;
+    //TODO: 向邻居传输的对列<tuple, neighborId>
+    protected Queue<Pair<Tuple, Integer>> nextTupleQueue;
 
     protected List<String> activeApplications;
 
     protected Map<String, Application> applicationMap;
     protected Map<String, List<String>> appToModulesMap;
     protected Map<Integer, Double> childToLatencyMap;
+    //TODO: 获取设备与邻近节点之间的延迟（<fogDeviceId, <neighborId, latency>>）
+//    protected Map<Integer, Map<Integer, Double>> neighborToLatencyMap;
+    protected Map<Integer, Double> neighborToLatencyMap;
 
     protected Map<Integer, Integer> cloudTrafficMap;
 
@@ -56,7 +62,7 @@ public class FogDevice extends PowerDataCenter {
      */
     protected int controllerId;
 
-    //TODO：（添加了相邻的边缘节点）IDs of the friends Fog Devices
+    //TODO：添加了相邻的边缘节点(<neighborId>)
     protected List<Integer> neighborIds;
     /**
      * IDs of the children Fog devices
@@ -75,9 +81,17 @@ public class FogDevice extends PowerDataCenter {
      */
     protected boolean isNorthLinkBusy;
 
+    //TODO: 判断周围邻居节点是否繁忙
+    protected boolean isNeighborLinkBusy;
+
     protected double uplinkBandwidth;
     protected double downlinkBandwidth;
+    //TODO: 邻居节点之间的传输带宽
+    protected double neighborBandwidth;
+
     protected double uplinkLatency;
+    //TODO: 邻居节点之间的传输延时(<neighborId, 对应的latency>)
+    protected Map<Integer, Double> neighborLatency;
     protected List<Pair<Integer, Double>> associatedActuatorIds; //Pair可以返回一个键值对(<actuatorId, delay>)
 
     protected double energyConsumption;
@@ -89,13 +103,10 @@ public class FogDevice extends PowerDataCenter {
     int numClients = 0;
     private int level;
 
-    public FogDevice(
-            String name,
-            FogDeviceCharacteristics characteristics,
-            VmAllocationPolicy vmAllocationPolicy,
-            List<Storage> storageList,
-            double schedulingInterval,
-            double uplinkBandwidth, double downlinkBandwidth, double uplinkLatency, double ratePerMips) throws Exception {
+    //DCNSFog的第一种调用
+    public FogDevice(String name, FogDeviceCharacteristics characteristics, VmAllocationPolicy vmAllocationPolicy,
+                     List<Storage> storageList, double schedulingInterval, double uplinkBandwidth, double downlinkBandwidth,
+                     double uplinkLatency, double ratePerMips) throws Exception {
         super(name, characteristics, vmAllocationPolicy, storageList, schedulingInterval);
         setCharacteristics(characteristics);
         setVmAllocationPolicy(vmAllocationPolicy);
@@ -106,6 +117,135 @@ public class FogDevice extends PowerDataCenter {
         setUplinkBandwidth(uplinkBandwidth);
         setDownlinkBandwidth(downlinkBandwidth);
         setUplinkLatency(uplinkLatency);
+        setRatePerMips(ratePerMips);
+        setAssociatedActuatorIds(new ArrayList<Pair<Integer, Double>>());
+        for (Host host : getCharacteristics().getHostList()) {
+            host.setDataCenter(this);
+        }
+        setActiveApplications(new ArrayList<String>());
+        // If this resource doesn't have any PEs then no useful at all
+        if (getCharacteristics().getNumberOfPes() == 0) {
+            throw new Exception(super.getName()
+                    + " : Error - this entity has no PEs. Therefore, can't process any Cloudlets.");
+        }
+        // stores id of this class
+        getCharacteristics().setId(super.getId());
+
+        applicationMap = new HashMap<String, Application>();
+        appToModulesMap = new HashMap<String, List<String>>();
+        northTupleQueue = new LinkedList<Tuple>();
+        southTupleQueue = new LinkedList<Pair<Tuple, Integer>>();
+        nextTupleQueue = new LinkedList<Pair<Tuple, Integer>>();
+        setNorthLinkBusy(false);
+        setSouthLinkBusy(false);
+        setNeighborLinkBusy(false);
+
+        setNeighborIds(new ArrayList<Integer>());
+        setChildrenIds(new ArrayList<Integer>());
+        setChildToOperatorsMap(new HashMap<Integer, List<String>>());
+
+        this.cloudTrafficMap = new HashMap<Integer, Integer>();
+
+        this.lockTime = 0;
+
+        this.energyConsumption = 0;
+        this.lastUtilization = 0;
+        setTotalCost(0);
+        setModuleInstanceCount(new HashMap<String, Map<String, Integer>>());
+        setChildToLatencyMap(new HashMap<Integer, Double>());
+        setNeighborToLatencyMap(new HashMap<Integer, Double>());
+
+        //TODO:添加FogDevice信息的打印
+        System.out.println("name:" + name + System.lineSeparator() +
+                "mips: " + characteristics.getHostList().get(0).getPeList().get(0).getPeProvisioner().getMips() + System.lineSeparator() +
+                "ram: " + characteristics.getHostList().get(0).getRamProvisioner().getRam() + System.lineSeparator() +
+                "upBw:" + uplinkBandwidth + System.lineSeparator() +
+                "downBw:" + downlinkBandwidth + System.lineSeparator() +
+                "level:" + level + System.lineSeparator() +
+                "ratePerMips:" + ratePerMips + System.lineSeparator() +
+                "busyPower: " + ((FogLinearPowerModel) ((PowerHost) characteristics.getHostList().get(0)).getPowerModel()).getMaxPower() + System.lineSeparator() +
+                "idlePower: " + ((FogLinearPowerModel) ((PowerHost) characteristics.getHostList().get(0)).getPowerModel()).getStaticPower() +
+                System.lineSeparator());
+    }
+
+//    public FogDevice(String name, FogDeviceCharacteristics characteristics, VmAllocationPolicy vmAllocationPolicy,
+//                     List<Storage> storageList, double schedulingInterval, double uplinkBandwidth, double downlinkBandwidth,
+//                     double uplinkLatency, Map<Integer, Double> neighborLatency, double ratePerMips) throws Exception {
+//        super(name, characteristics, vmAllocationPolicy, storageList, schedulingInterval);
+//        setCharacteristics(characteristics);
+//        setVmAllocationPolicy(vmAllocationPolicy);
+//        setLastProcessTime(0.0);
+//        setStorageList(storageList);
+//        setVmList(new ArrayList<Vm>());
+//        setSchedulingInterval(schedulingInterval);
+//        setUplinkBandwidth(uplinkBandwidth);
+//        setDownlinkBandwidth(downlinkBandwidth);
+//        setUplinkLatency(uplinkLatency);
+//        setNeighborLatency(neighborLatency);
+//        setRatePerMips(ratePerMips);
+//        setAssociatedActuatorIds(new ArrayList<Pair<Integer, Double>>());
+//        for (Host host : getCharacteristics().getHostList()) {
+//            host.setDataCenter(this);
+//        }
+//        setActiveApplications(new ArrayList<String>());
+//        // If this resource doesn't have any PEs then no useful at all
+//        if (getCharacteristics().getNumberOfPes() == 0) {
+//            throw new Exception(super.getName()
+//                    + " : Error - this entity has no PEs. Therefore, can't process any Cloudlets.");
+//        }
+//        // stores id of this class
+//        getCharacteristics().setId(super.getId());
+//
+//        applicationMap = new HashMap<String, Application>();
+//        appToModulesMap = new HashMap<String, List<String>>();
+//        northTupleQueue = new LinkedList<Tuple>();
+//        southTupleQueue = new LinkedList<Pair<Tuple, Integer>>();
+//        setNorthLinkBusy(false);
+//        setSouthLinkBusy(false);
+//
+//        setNeighborIds(new ArrayList<Integer>());
+//        setChildrenIds(new ArrayList<Integer>());
+//        setChildToOperatorsMap(new HashMap<Integer, List<String>>());
+//
+//        this.cloudTrafficMap = new HashMap<Integer, Integer>();
+//
+//        this.lockTime = 0;
+//
+//        this.energyConsumption = 0;
+//        this.lastUtilization = 0;
+//        setTotalCost(0);
+//        setModuleInstanceCount(new HashMap<String, Map<String, Integer>>());
+//        setChildToLatencyMap(new HashMap<Integer, Double>());
+//
+//        //TODO:添加FogDevice信息的打印
+//        System.out.println("name:" + name + System.lineSeparator() +
+//                "mips: " + characteristics.getHostList().get(0).getPeList().get(0).getPeProvisioner().getMips() + System.lineSeparator() +
+//                "ram: " + characteristics.getHostList().get(0).getRamProvisioner().getRam() + System.lineSeparator() +
+//                "upBw:" + uplinkBandwidth + System.lineSeparator() +
+//                "downBw:" + downlinkBandwidth + System.lineSeparator() +
+//                "level:" + level + System.lineSeparator() +
+//                "ratePerMips:" + ratePerMips + System.lineSeparator() +
+//                "busyPower: " + ((FogLinearPowerModel) ((PowerHost) characteristics.getHostList().get(0)).getPowerModel()).getMaxPower() + System.lineSeparator() +
+//                "idlePower: " + ((FogLinearPowerModel) ((PowerHost) characteristics.getHostList().get(0)).getPowerModel()).getStaticPower() +
+//                System.lineSeparator());
+//    }
+
+    //DCNSFog的第二种调用
+    public FogDevice(String name, FogDeviceCharacteristics characteristics, VmAllocationPolicy vmAllocationPolicy,
+                     List<Storage> storageList, double schedulingInterval, double uplinkBandwidth, double downlinkBandwidth,
+                     double neighborBandwidth, double uplinkLatency, Map<Integer, Double> neighborLatency, double ratePerMips) throws Exception {
+        super(name, characteristics, vmAllocationPolicy, storageList, schedulingInterval);
+        setCharacteristics(characteristics);
+        setVmAllocationPolicy(vmAllocationPolicy);
+        setLastProcessTime(0.0);
+        setStorageList(storageList);
+        setVmList(new ArrayList<Vm>());
+        setSchedulingInterval(schedulingInterval);
+        setUplinkBandwidth(uplinkBandwidth);
+        setDownlinkBandwidth(downlinkBandwidth);
+        setNeighborBandwidth(neighborBandwidth);
+        setUplinkLatency(uplinkLatency);
+        setNeighborLatency(neighborLatency);
         setRatePerMips(ratePerMips);
         setAssociatedActuatorIds(new ArrayList<Pair<Integer, Double>>());
         for (Host host : getCharacteristics().getHostList()) {
@@ -140,6 +280,7 @@ public class FogDevice extends PowerDataCenter {
         setTotalCost(0);
         setModuleInstanceCount(new HashMap<String, Map<String, Integer>>());
         setChildToLatencyMap(new HashMap<Integer, Double>());
+        setNeighborToLatencyMap(new HashMap<Integer, Double>());
 
         //TODO:添加FogDevice信息的打印
         System.out.println("name:" + name + System.lineSeparator() +
@@ -240,6 +381,7 @@ public class FogDevice extends PowerDataCenter {
         this.lastUtilization = 0;
         setTotalCost(0);
         setChildToLatencyMap(new HashMap<Integer, Double>());
+        setNeighborToLatencyMap(new HashMap<Integer, Double>());
         setModuleInstanceCount(new HashMap<String, Map<String, Integer>>());
     }
 
@@ -664,6 +806,8 @@ public class FogDevice extends PowerDataCenter {
         //TODO:消息传递打印
 //        System.out.println(getName() + ":\nReceived tuple " + tuple.getCloudletId() + " with tupleType = " + tuple.getTupleType() + " | Source : " +
 //                CloudSim.getEntityName(ev.getSource()) + " |Dest : " + CloudSim.getEntityName(ev.getDestination()));
+
+        // 任务元组到达，开始下一个请求的发送
         send(ev.getSource(), CloudSim.getMinTimeBetweenEvents(), FogEvents.TUPLE_ACK);
 
         if (FogUtils.appIdToGeoCoverageMap.containsKey(tuple.getAppId())) {
@@ -688,12 +832,13 @@ public class FogDevice extends PowerDataCenter {
             }
         }
 
-
+        //判断整个应用是否处理完成
         if (getName().equals("cloud") && tuple.getDestModuleName() == null) {
             sendNow(getControllerId(), FogEvents.TUPLE_FINISHED, null);
         }
 
         if (appToModulesMap.containsKey(tuple.getAppId())) {
+            //包含该元组应用的所有模块是否能够匹配该元组的目的模块
             if (appToModulesMap.get(tuple.getAppId()).contains(tuple.getDestModuleName())) {
                 int vmId = -1;
                 for (Vm vm : getHost().getVmList()) {
@@ -717,6 +862,10 @@ public class FogDevice extends PowerDataCenter {
                 else if (tuple.getDirection() == Tuple.DOWN) {
                     for (int childId : getChildrenIds())
                         sendDown(tuple, childId);
+                } else if (tuple.getDirection() == Tuple.NEIGHBOR) {
+                    //TODO
+                    for (int neighborId : getNeighborIds())
+                        sendNext(tuple, neighborId);
                 }
             } else {
                 sendUp(tuple);
@@ -787,7 +936,7 @@ public class FogDevice extends PowerDataCenter {
             module.setNumInstances(instances);
         } else if (tuple.getDirection() == Tuple.NEIGHBOR) {
             String srcModule = tuple.getSrcModuleName();
-            //TODO：tuple 发送到周围的邻接边缘节点中执行
+            //TODO：tuple发送到周围的邻接边缘节点中执行
         }
 
         TimeKeeper.getInstance().tupleStartedExecution(tuple);
@@ -848,6 +997,12 @@ public class FogDevice extends PowerDataCenter {
         NetworkUsageMonitor.sendingTuple(getUplinkLatency(), tuple.getCloudletFileSize());
     }
 
+    protected void sendAroundFreeLink(Tuple tuple) {
+        //TODO: 添加邻居节点的send
+        //TODO: 添加邻居节点的sendingTuple
+
+    }
+
     protected void sendUp(Tuple tuple) {
         if (parentId > 0) {
             if (!isNorthLinkBusy()) {
@@ -871,6 +1026,7 @@ public class FogDevice extends PowerDataCenter {
     protected void sendDownFreeLink(Tuple tuple, int childId) {
         double networkDelay = tuple.getCloudletFileSize() / getDownlinkBandwidth();
         //Logger.debug(getName(), "Sending tuple with tupleType = "+tuple.getTupleType()+" DOWN");
+        //TODO: 只把tuple传输给一个south子节点，为什么就说"南连接"处于繁忙阶段
         setSouthLinkBusy(true);
         double latency = getChildToLatencyMap().get(childId);
         send(getId(), networkDelay, FogEvents.UPDATE_SOUTH_TUPLE_QUEUE);
@@ -888,10 +1044,18 @@ public class FogDevice extends PowerDataCenter {
         }
     }
 
+    protected void sendNeighborFreeLink(Tuple tuple, int neighborId) {
+        double networkDelay = tuple.getCloudletFileSize() / getNeighborBandwidth();
+        setNeighborLinkBusy(true);
+//        double latency = getN
+    }
+
     //TODO：发送给周围的节点
     protected void sendNext(Tuple tuple, int neighborId) {
         if (getNeighborIds().contains(neighborId)) {
+            if (!isNeighborLinkBusy()) {
 
+            }
         }
     }
 
@@ -943,6 +1107,14 @@ public class FogDevice extends PowerDataCenter {
         this.uplinkLatency = uplinkLatency;
     }
 
+    public void setNeighborLatency(Map<Integer, Double> neighborLatency) {
+        this.neighborLatency = neighborLatency;
+    }
+
+    public Map<Integer, Double> getNeighborLatency() {
+        return neighborLatency;
+    }
+
     public boolean isSouthLinkBusy() {
         return isSouthLinkBusy;
     }
@@ -957,6 +1129,14 @@ public class FogDevice extends PowerDataCenter {
 
     public void setNorthLinkBusy(boolean isNorthLinkBusy) {
         this.isNorthLinkBusy = isNorthLinkBusy;
+    }
+
+    public boolean isNeighborLinkBusy() {
+        return isNeighborLinkBusy;
+    }
+
+    public void setNeighborLinkBusy(boolean isNeighborLinkBusy) {
+        this.isNeighborLinkBusy = isNeighborLinkBusy;
     }
 
     public int getControllerId() {
@@ -1015,6 +1195,14 @@ public class FogDevice extends PowerDataCenter {
         this.downlinkBandwidth = downlinkBandwidth;
     }
 
+    public double getNeighborBandwidth() {
+        return neighborBandwidth;
+    }
+
+    public void setNeighborBandwidth(double neighborBandwidth) {
+        this.neighborBandwidth = neighborBandwidth;
+    }
+
     public List<Pair<Integer, Double>> getAssociatedActuatorIds() {
         return associatedActuatorIds;
     }
@@ -1037,6 +1225,22 @@ public class FogDevice extends PowerDataCenter {
 
     public void setChildToLatencyMap(Map<Integer, Double> childToLatencyMap) {
         this.childToLatencyMap = childToLatencyMap;
+    }
+
+//    public Map<Integer, Map<Integer, Double>> getNeighborToLatencyMap() {
+//        return neighborToLatencyMap;
+//    }
+//
+//    public void setNeighborToLatencyMap(Map<Integer, Map<Integer, Double>> neighborToLatencyMap) {
+//        this.neighborToLatencyMap = neighborToLatencyMap;
+//    }
+
+    public void setNeighborToLatencyMap(Map<Integer, Double> neighborToLatencyMap) {
+        this.neighborToLatencyMap = neighborToLatencyMap;
+    }
+
+    public Map<Integer, Double> getNeighborToLatencyMap() {
+        return neighborToLatencyMap;
     }
 
     public int getLevel() {

@@ -25,10 +25,7 @@ import org.fog.utils.FogUtils;
 import org.fog.utils.TimeKeeper;
 import org.fog.utils.distribution.DeterministicDistribution;
 
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 public class WeatherSim {
     static List<FogDevice> fogDevices = new ArrayList<FogDevice>();
