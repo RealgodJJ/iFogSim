@@ -67,16 +67,6 @@ public class Controller extends SimEntity {
             parent.getChildrenIds().add(fogDevice.getId());
         }
 
-//        for (FogDevice fogDevice : getFogDevices()) {
-//            List<Integer> neighborIds = fogDevice.getNeighborIds();
-//            for (Integer neighborId : neighborIds) {
-//                FogDevice neighbor = getFogDeviceById(neighborId);
-//                Map<Integer, Double> neighborLatencies = Objects.requireNonNull(neighbor).getNeighborLatency();
-//                fogDevice.getNeighborToLatencyMap().put(neighborId, neighborLatencies);
-//                fogDevice.getNeighborIds().add(neighbor.getId());
-//            }
-//        }
-
         for (FogDevice fogDevice : getFogDevices()) {
             Map<Integer, Double> neighborLatency = fogDevice.getNeighborLatency();
             List<Integer> neighborIds = fogDevice.getNeighborIds();

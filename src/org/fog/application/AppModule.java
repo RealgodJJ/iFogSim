@@ -34,7 +34,9 @@ public class AppModule extends PowerVm{
      */
 	//模块(String)传入到该模块的次数(Integer)中
     private Map<String, List<Integer>> downInstanceIdsMaps;
-	
+    //单次传递的起点模块名称（String）与其传入到当前目的模块的Id列表（Integer）之间的映射
+    private Map<String, List<Integer>> neighborInstanceIdsMaps;
+
 	/**
 	 * Number of instances of this module
 	 */
@@ -146,9 +148,19 @@ public class AppModule extends PowerVm{
 	public Map<String, List<Integer>> getDownInstanceIdsMaps() {
 		return downInstanceIdsMaps;
 	}
+
 	public void setDownInstanceIdsMaps(Map<String, List<Integer>> downInstanceIdsMaps) {
 		this.downInstanceIdsMaps = downInstanceIdsMaps;
 	}
+
+	public Map<String, List<Integer>> getNeighborInstanceIdsMaps() {
+		return neighborInstanceIdsMaps;
+	}
+
+	public void setNeighborInstanceIdsMaps(Map<String, List<Integer>> neighborInstanceIdsMaps) {
+		this.neighborInstanceIdsMaps = neighborInstanceIdsMaps;
+	}
+
 	public int getNumInstances() {
 		return numInstances;
 	}

@@ -37,7 +37,7 @@ public class FogDevice extends PowerDataCenter {
     //向下传传输的对列<tuple, childId>
     protected Queue<Pair<Tuple, Integer>> southTupleQueue;
     //TODO: 向邻居传输的对列<tuple, neighborId>
-    protected Queue<Pair<Tuple, Integer>> nextTupleQueue;
+    protected Queue<Pair<Tuple, Integer>> neighborTupleQueue;
 
     protected List<String> activeApplications;
 
@@ -135,7 +135,7 @@ public class FogDevice extends PowerDataCenter {
         appToModulesMap = new HashMap<String, List<String>>();
         northTupleQueue = new LinkedList<Tuple>();
         southTupleQueue = new LinkedList<Pair<Tuple, Integer>>();
-        nextTupleQueue = new LinkedList<Pair<Tuple, Integer>>();
+        neighborTupleQueue = new LinkedList<Pair<Tuple, Integer>>();
         setNorthLinkBusy(false);
         setSouthLinkBusy(false);
         setNeighborLinkBusy(false);
@@ -421,6 +421,9 @@ public class FogDevice extends PowerDataCenter {
                 updateNorthTupleQueue();
                 break;
             case FogEvents.UPDATE_SOUTH_TUPLE_QUEUE:
+                updateSouthTupleQueue();
+                break;
+            case FogEvents.UPDATE_NEIGHBOR_TUPLE_QUEUE:
                 updateSouthTupleQueue();
                 break;
             case FogEvents.ACTIVE_APP_UPDATE:
@@ -863,9 +866,8 @@ public class FogDevice extends PowerDataCenter {
                     for (int childId : getChildrenIds())
                         sendDown(tuple, childId);
                 } else if (tuple.getDirection() == Tuple.NEIGHBOR) {
-                    //TODO
                     for (int neighborId : getNeighborIds())
-                        sendNext(tuple, neighborId);
+                        sendNeighbor(tuple, neighborId);
                 }
             } else {
                 sendUp(tuple);
@@ -877,9 +879,8 @@ public class FogDevice extends PowerDataCenter {
                 for (int childId : getChildrenIds())
                     sendDown(tuple, childId);
             } else if (tuple.getDirection() == Tuple.NEIGHBOR) {
-                //TODO
                 for (int neighborId : getNeighborIds())
-                    sendNext(tuple, neighborId);
+                    sendNeighbor(tuple, neighborId);
             }
         }
     }
@@ -935,8 +936,18 @@ public class FogDevice extends PowerDataCenter {
             }
             module.setNumInstances(instances);
         } else if (tuple.getDirection() == Tuple.NEIGHBOR) {
-            String srcModule = tuple.getSrcModuleName();
             //TODO：tuple发送到周围的邻接边缘节点中执行
+            String srcModule = tuple.getSrcModuleName();
+            if (!module.getNeighborInstanceIdsMaps().containsKey(srcModule))
+                module.getNeighborInstanceIdsMaps().put(srcModule, new ArrayList<>());
+            if (!module.getNeighborInstanceIdsMaps().get(srcModule).contains(tuple.getSourceModuleId()))
+                module.getNeighborInstanceIdsMaps().get(srcModule).add(tuple.getSourceModuleId());
+
+            int instances = -1;
+            for (String _moduleName : module.getNeighborInstanceIdsMaps().keySet()) {
+                instances = Math.max(module.getNeighborInstanceIdsMaps().get(_moduleName).size(), instances);
+            }
+            module.setNumInstances(instances);
         }
 
         TimeKeeper.getInstance().tupleStartedExecution(tuple);
@@ -997,12 +1008,6 @@ public class FogDevice extends PowerDataCenter {
         NetworkUsageMonitor.sendingTuple(getUplinkLatency(), tuple.getCloudletFileSize());
     }
 
-    protected void sendAroundFreeLink(Tuple tuple) {
-        //TODO: 添加邻居节点的send
-        //TODO: 添加邻居节点的sendingTuple
-
-    }
-
     protected void sendUp(Tuple tuple) {
         if (parentId > 0) {
             if (!isNorthLinkBusy()) {
@@ -1012,7 +1017,6 @@ public class FogDevice extends PowerDataCenter {
             }
         }
     }
-
 
     protected void updateSouthTupleQueue() {
         if (!getSouthTupleQueue().isEmpty()) {
@@ -1047,14 +1051,19 @@ public class FogDevice extends PowerDataCenter {
     protected void sendNeighborFreeLink(Tuple tuple, int neighborId) {
         double networkDelay = tuple.getCloudletFileSize() / getNeighborBandwidth();
         setNeighborLinkBusy(true);
-//        double latency = getN
+        double latency = getNeighborToLatencyMap().get(neighborId);
+        send(getId(), networkDelay, FogEvents.UPDATE_NEIGHBOR_TUPLE_QUEUE);
+        send(neighborId, networkDelay + latency, FogEvents.TUPLE_ARRIVAL, tuple);
+        NetworkUsageMonitor.sendingTuple(latency, tuple.getCloudletFileSize());
     }
 
     //TODO：发送给周围的节点
-    protected void sendNext(Tuple tuple, int neighborId) {
+    protected void sendNeighbor(Tuple tuple, int neighborId) {
         if (getNeighborIds().contains(neighborId)) {
             if (!isNeighborLinkBusy()) {
-
+                sendNeighborFreeLink(tuple, neighborId);
+            } else {
+                neighborTupleQueue.add(new Pair<>(tuple, neighborId));
             }
         }
     }
