@@ -1,11 +1,6 @@
 package org.fog.entities;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Queue;
+import java.util.*;
 
 import org.apache.commons.math3.util.Pair;
 import org.cloudbus.cloudsim.Cloudlet;
@@ -100,7 +95,10 @@ public class FogDevice extends PowerDataCenter {
     protected double ratePerMips;
     protected double totalCost;
     protected Map<String, Map<String, Integer>> moduleInstanceCount;
-    int numClients = 0;
+
+    protected int tupleQuanityFromChildren = 0;
+    protected int tupleQuanityFromParent = 0;
+    protected Queue<Pair<Integer, Integer>> tupleQuantityOfNeighbors;
     private int level;
 
     //DCNSFog的第一种调用
@@ -424,7 +422,7 @@ public class FogDevice extends PowerDataCenter {
                 updateSouthTupleQueue();
                 break;
             case FogEvents.UPDATE_NEIGHBOR_TUPLE_QUEUE:
-                updateSouthTupleQueue();
+                updateNeighborTupleQueue();
                 break;
             case FogEvents.ACTIVE_APP_UPDATE:
                 updateActiveApplications(ev);
@@ -450,6 +448,7 @@ public class FogDevice extends PowerDataCenter {
     private void manageResources(SimEvent ev) {
         updateEnergyConsumption();
         send(getId(), Config.RESOURCE_MGMT_INTERVAL, FogEvents.RESOURCE_MGMT);
+//        System.out.println("==== manageResources ====");
     }
 
     /**
@@ -463,7 +462,8 @@ public class FogDevice extends PowerDataCenter {
         if (!moduleInstanceCount.containsKey(appId))
             moduleInstanceCount.put(appId, new HashMap<String, Integer>());
         moduleInstanceCount.get(appId).put(config.getModule().getName(), config.getInstanceCount());
-        System.out.println(getName() + " Creating " + config.getInstanceCount() + " instances of module " + config.getModule().getName());
+//        System.out.println("==== updateModuleInstanceCount ====");
+//        System.out.println(getName() + " Creating " + config.getInstanceCount() + " instances of module " + config.getModule().getName());
     }
 
     private AppModule getModuleByName(String moduleName) {
@@ -501,17 +501,20 @@ public class FogDevice extends PowerDataCenter {
             sendToSelf(tuple);
         }
         send(getId(), edge.getPeriodicity(), FogEvents.SEND_PERIODIC_TUPLE, edge);
+//        System.out.println("==== sendPeriodicTuple ====");
     }
 
     protected void processActuatorJoined(SimEvent ev) {
         int actuatorId = ev.getSource();
         double delay = (double) ev.getData();
         getAssociatedActuatorIds().add(new Pair<Integer, Double>(actuatorId, delay));
+//        System.out.println("==== processActuatorJoined ====");
     }
 
     protected void updateActiveApplications(SimEvent ev) {
         Application app = (Application) ev.getData();
         getActiveApplications().add(app.getAppId());
+//        System.out.println("==== updateActiveApplications ====");
     }
 
     public String getOperatorName(int vmId) {
@@ -748,6 +751,8 @@ public class FogDevice extends PowerDataCenter {
     protected void processAppSubmit(SimEvent ev) {
         Application app = (Application) ev.getData();
         applicationMap.put(app.getAppId(), app);
+
+//        System.out.println("==== processAppSubmit ====");
     }
 
     protected void addChild(int childId) {
@@ -764,6 +769,7 @@ public class FogDevice extends PowerDataCenter {
         if (!cloudTrafficMap.containsKey(time))
             cloudTrafficMap.put(time, 0);
         cloudTrafficMap.put(time, cloudTrafficMap.get(time) + 1);
+//        System.out.println("==== updaateCloudTraffic ====");
     }
 
     protected void sendTupleToActuator(Tuple tuple) {
@@ -790,11 +796,44 @@ public class FogDevice extends PowerDataCenter {
         for (int childId : getChildrenIds()) {
             sendDown(tuple, childId);
         }
+//        System.out.println("==== sendTupleToActuator ====");
     }
 
     // 接收传来的元组
     protected void processTupleArrival(SimEvent ev) {
         Tuple tuple = (Tuple) ev.getData();
+
+//        isProcessByItself(tuple);
+
+        //TODO:遍历当前节点的所有的子节点的任务上传队列，获取该节点待处理的任务数量
+//        for (int childId : getChildrenIds()) {
+//            int tupleQuantityFromChild = ((FogDevice) CloudSim.getEntity(childId)).getNorthTupleQueue().size();
+//            tupleQuanityFromChildren += tupleQuantityFromChild;
+//        }
+
+        //TODO:遍历邻居节点的所有的子节点的任务上传队列，获取邻居节点待处理的任务数量
+//        for (int neighborId : getNeighborIds()) {
+//            int tupleQuanityOfNeighbor = 0;
+//            for (int childId : ((FogDevice) CloudSim.getEntity(neighborId)).getChildrenIds()) {
+//                tupleQuanityOfNeighbor += ((FogDevice) CloudSim.getEntity(childId)).getNorthTupleQueue().size();
+//            }
+//            tupleQuantityOfNeighbors.add(new Pair<>(neighborId, tupleQuanityOfNeighbor));
+//        }
+//
+//        int minNeighbor = tupleQuanityFromChildren;
+//        int minNeighborId = Objects.requireNonNull(getTupleQuantityOfNeighbors().poll()).getFirst();
+//        while (!getTupleQuantityOfNeighbors().isEmpty()) {
+//            Pair<Integer, Integer> pair = getTupleQuantityOfNeighbors().poll();
+//            if (tupleQuanityFromChildren > Objects.requireNonNull(pair).getSecond()) {
+//                minNeighbor = Math.min(minNeighbor, pair.getSecond());
+//                minNeighborId = pair.getFirst();
+//            }
+//        }
+//
+//        if (minNeighbor < tupleQuanityFromChildren) {
+//            sendNeighbor(tuple, minNeighborId);
+//        }
+
 
         if (getName().equals("cloud")) {
             updateCloudTraffic();
@@ -807,8 +846,10 @@ public class FogDevice extends PowerDataCenter {
                 CloudSim.getEntityName(ev.getSource()) + "|Dest : " + CloudSim.getEntityName(ev.getDestination()));
 
         //TODO:消息传递打印
-//        System.out.println(getName() + ":\nReceived tuple " + tuple.getCloudletId() + " with tupleType = " + tuple.getTupleType() + " | Source : " +
-//                CloudSim.getEntityName(ev.getSource()) + " |Dest : " + CloudSim.getEntityName(ev.getDestination()));
+//        System.out.println("==== processTupleArrival ====");
+//        System.out.println(getName() + "\nFogEvent Tag:" + ev.getTag() + " | Received tuple " + +tuple.getCloudletId() + " with tupleType = " + tuple.getTupleType() +
+//                " | Source : " + CloudSim.getEntityName(ev.getSource()) + " or " + tuple.getSrcModuleName() +
+//                " | Dest : " + CloudSim.getEntityName(ev.getDestination()) + " or " + tuple.getDestModuleName() + "\n");
 
         // 任务元组到达，开始下一个请求的发送
         send(ev.getSource(), CloudSim.getMinTimeBetweenEvents(), FogEvents.TUPLE_ACK);
@@ -885,6 +926,35 @@ public class FogDevice extends PowerDataCenter {
         }
     }
 
+    //TODO: 是否有设备本身来处理这个tuple
+    private boolean isProcessByItself(Tuple tuple) {
+        boolean canBe = false;
+        //获取执行tuple的appModule
+        AppModule module = getModuleByName(tuple.getDestModuleName());
+        //Vm vmModule = new Vm();
+        for (final Vm vm : getHost().getVmList()) {                //寻找该module
+            if (((AppModule) vm).getName().equals(tuple.getDestModuleName())) {
+                int num = vm.getCloudletScheduler().runningCloudlets();
+                if (vm.getCloudletScheduler().runningCloudlets() < 1) {
+                    return true;
+                }
+                double networkDelay = tuple.getCloudletFileSize() / getNeighborBandwidth();
+//                double capacity = vm.getCloudletScheduler().getVmCapacity(getVmAllocationPolicy().getHost(module).getVmScheduler()
+//                        .getAllocatedMipsForVm(module));
+//                double totalCapacity = getVmAllocationPolicy().getHost(module).getVmScheduler().getTotalAllocatedMipsForVm(module);
+//                double predictTime = tuple.getCloudletLength() / capacity;
+//                System.out.println(getName() + "   moduleName:" + tuple.getDestModuleName() + "   capacity:  " + capacity + "   totalCapacity:" + totalCapacity + "  num:" + num + "  predictTime" + predictTime);
+//                if (predictTime > 5 * (networkDelay + getNeighborLatency())) {
+//                    return false;
+//                }
+                return true;
+            }
+        }
+        //vmModule.getCloudletScheduler().get
+
+        return canBe;
+    }
+
     protected void updateTimingsOnReceipt(Tuple tuple) {
         Application app = getApplicationMap().get(tuple.getAppId());
         String srcModule = tuple.getSrcModuleName();
@@ -913,6 +983,7 @@ public class FogDevice extends PowerDataCenter {
 
     protected void processSensorJoining(SimEvent ev) {
         send(ev.getSource(), CloudSim.getMinTimeBetweenEvents(), FogEvents.TUPLE_ACK);
+//        System.out.println("==== processSensorJoining ====");
     }
 
     //处理从传感器或是其他雾设备传来的元组
@@ -975,6 +1046,7 @@ public class FogDevice extends PowerDataCenter {
 
         module.updateVmProcessing(CloudSim.clock(), getVmAllocationPolicy().getHost(module).getVmScheduler()
                 .getAllocatedMipsForVm(module));
+//        System.out.println("==== processModuleArrival ====");
     }
 
     private void initializePeriodicTuples(AppModule module) {
@@ -988,16 +1060,19 @@ public class FogDevice extends PowerDataCenter {
 
     protected void processOperatorRelease(SimEvent ev) {
         this.processVmMigrate(ev, false);
+//        System.out.println("==== processOperatorRelease ====");
     }
 
-
+    //如果队列不空，从队伍中取出任务执行
     protected void updateNorthTupleQueue() {
         if (!getNorthTupleQueue().isEmpty()) {
             Tuple tuple = getNorthTupleQueue().poll();
             sendUpFreeLink(tuple);
+//            System.out.println("NorthTupleQueueSize: " + getNorthTupleQueue().size());
         } else {
             setNorthLinkBusy(false);
         }
+//        System.out.println("==== updateNorthTupleQueue ====");
     }
 
     protected void sendUpFreeLink(Tuple tuple) {
@@ -1025,6 +1100,7 @@ public class FogDevice extends PowerDataCenter {
         } else {
             setSouthLinkBusy(false);
         }
+//        System.out.println("==== updateSouthTupleQueue ====");
     }
 
     protected void sendDownFreeLink(Tuple tuple, int childId) {
@@ -1046,6 +1122,16 @@ public class FogDevice extends PowerDataCenter {
                 southTupleQueue.add(new Pair<Tuple, Integer>(tuple, childId));
             }
         }
+    }
+
+    protected void updateNeighborTupleQueue() {
+        if (!getSouthTupleQueue().isEmpty()) {
+            Pair<Tuple, Integer> pair = getSouthTupleQueue().poll();
+            sendDownFreeLink(pair.getFirst(), pair.getSecond());
+        } else {
+            setSouthLinkBusy(false);
+        }
+//        System.out.println("==== updateNeighborTupleQueue ====");
     }
 
     protected void sendNeighborFreeLink(Tuple tuple, int neighborId) {
@@ -1283,5 +1369,29 @@ public class FogDevice extends PowerDataCenter {
     public void setModuleInstanceCount(
             Map<String, Map<String, Integer>> moduleInstanceCount) {
         this.moduleInstanceCount = moduleInstanceCount;
+    }
+
+    public int getTupleQuanityFromChildren() {
+        return tupleQuanityFromChildren;
+    }
+
+    public void setTupleQuanityFromChildren(int tupleQuanityFromChildren) {
+        this.tupleQuanityFromChildren = tupleQuanityFromChildren;
+    }
+
+    public int getTupleQuanityFromParent() {
+        return tupleQuanityFromParent;
+    }
+
+    public void setTupleQuanityFromParent(int tupleQuanityFromParent) {
+        this.tupleQuanityFromParent = tupleQuanityFromParent;
+    }
+
+    public Queue<Pair<Integer, Integer>> getTupleQuantityOfNeighbors() {
+        return tupleQuantityOfNeighbors;
+    }
+
+    public void setTupleQuantityOfNeighbors(Queue<Pair<Integer, Integer>> tupleQuantityOfNeighbors) {
+        this.tupleQuantityOfNeighbors = tupleQuantityOfNeighbors;
     }
 }

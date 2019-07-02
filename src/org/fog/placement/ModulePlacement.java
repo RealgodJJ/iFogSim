@@ -20,6 +20,7 @@ public abstract class ModulePlacement {
 	private Application application;
 	private Map<String, List<Integer>> moduleToDeviceMap;
 	private Map<Integer, List<AppModule>> deviceToModuleMap;
+	//Map<FogDeviceId, Map<AppModuleName, count>>
 	private Map<Integer, Map<String, Integer>> moduleInstanceCountMap;
 	
 	protected abstract void mapModules();

@@ -279,6 +279,11 @@ public class CloudletSchedulerSpaceShared extends CloudletScheduler {
         return false;
     }
 
+    @Override
+    public double cloudletRestart(int clId) {
+        return 0;
+    }
+
     /**
      * Processes a finished cloudlet.
      *

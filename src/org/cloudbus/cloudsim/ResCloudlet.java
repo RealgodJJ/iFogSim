@@ -331,7 +331,7 @@ public class ResCloudlet {
             // if a previous Cloudlet status is INEXEC
             if (prevStatus == Cloudlet.INEXEC) {
                 // and current status is either CANCELED, PAUSED or SUCCESS
-                if (status == Cloudlet.CANCELED || status == Cloudlet.PAUSED || status == Cloudlet.SUCCESS) {
+                if (status == Cloudlet.CANCELED || status == Cloudlet.PAUSED || status == Cloudlet.SUCCESS || status == Cloudlet.WAITED) {
                     // then update the Cloudlet completion time
                     totalCompletionTime += (clock - startExecTime);
                     index = 0;

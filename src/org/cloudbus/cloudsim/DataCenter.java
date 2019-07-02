@@ -826,6 +826,10 @@ public class DataCenter extends SimEntity {
         }
     }
 
+    protected void processCloudletStart(int cloudletId, int userId, int vmId, boolean ack) {
+
+    }
+
     /**
      * Processes a Cloudlet pause request.
      *

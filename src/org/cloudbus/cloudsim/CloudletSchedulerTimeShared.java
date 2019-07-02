@@ -8,10 +8,11 @@
 package org.cloudbus.cloudsim;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import org.cloudbus.cloudsim.core.CloudSim;
-import org.fog.entities.Tuple;
 
 /**
  * CloudletSchedulerTimeShared implements a policy of scheduling performed by a virtual machine.
@@ -22,6 +23,14 @@ import org.fog.entities.Tuple;
  * @since CloudSim Toolkit 1.0
  */
 public class CloudletSchedulerTimeShared extends CloudletScheduler {
+    private int maxNumOfCloudletSynchronous;
+    private int waitingListNum;
+
+    /**
+     * The cloudlet waiting list.
+     */
+    //TODO:
+    private List<? extends ResCloudlet> cloudletWaitingList;
 
     /**
      * The cloudlet exec list.
@@ -39,7 +48,7 @@ public class CloudletSchedulerTimeShared extends CloudletScheduler {
     private List<? extends ResCloudlet> cloudletFinishedList;
 
     /**
-     * The current cp us.
+     * The current cpus.
      */
     protected int currentCPUs;
 
@@ -55,6 +64,7 @@ public class CloudletSchedulerTimeShared extends CloudletScheduler {
         cloudletExecList = new ArrayList<ResCloudlet>();
         cloudletPausedList = new ArrayList<ResCloudlet>();
         cloudletFinishedList = new ArrayList<ResCloudlet>();
+        cloudletWaitingList = new ArrayList<ResCloudlet>();
         currentCPUs = 0;
     }
 
@@ -81,6 +91,9 @@ public class CloudletSchedulerTimeShared extends CloudletScheduler {
 
         }
 
+        //TODO: 将放入等待队列中的任务逐渐放入到执行队列中
+        WaitGiveBackToExec();
+
         if (getCloudletExecList().size() == 0) {
             setPreviousTime(currentTime);
             return 0.0;
@@ -102,8 +115,7 @@ public class CloudletSchedulerTimeShared extends CloudletScheduler {
         // estimate finish time of cloudlets
         for (ResCloudlet rcl : getCloudletExecList()) {
             //TODO:计算单个任务在cloudlet上的执行时间
-            double estimatedFinishTime = currentTime
-                    + (rcl.getRemainingCloudletLength() / (getCapacity(mipsShare) * rcl.getNumberOfPes()));
+            double estimatedFinishTime = currentTime + (rcl.getRemainingCloudletLength() / (getCapacity(mipsShare) * rcl.getNumberOfPes()));
             //TODO：执行时间小于两个任务之间的最小间隔，则选用最小的间隔时间作为执行任务的完成时间
             if (estimatedFinishTime - currentTime < CloudSim.getMinTimeBetweenEvents()) {
                 estimatedFinishTime = currentTime + CloudSim.getMinTimeBetweenEvents();
@@ -116,6 +128,18 @@ public class CloudletSchedulerTimeShared extends CloudletScheduler {
 
         setPreviousTime(currentTime);
         return nextEvent;
+    }
+
+    //将等待队列中的任务返回给执行队列
+    private void WaitGiveBackToExec() {
+        //如果等待队列非空，并且云队列执行任务的数量未达到最大容纳数量
+        if (!getCloudletWaitingList().isEmpty() && getCloudletExecList().size() < maxNumOfCloudletSynchronous) {
+            int moveNum = Math.min(getCloudletWaitingList().size(), maxNumOfCloudletSynchronous - getCloudletExecList().size());
+            for (int i = 0; i < moveNum; i++) {
+                //把等待队列中的第一个任务返回给执行队列
+                cloudletRestart(getCloudletWaitingList().get(0).getCloudletId());
+            }
+        }
     }
 
     /**
@@ -263,6 +287,36 @@ public class CloudletSchedulerTimeShared extends CloudletScheduler {
         getCloudletFinishedList().add(rcl);
     }
 
+    //TODO: 任务重启放在执行队列中
+//    @Override
+    public double cloudletRestart(int cloudletId) {
+        boolean found = false;
+        int position = 0;       //标记目标cloudlet在等待队列中的位置
+
+        // look for the cloudlet in the waiting list
+        for (ResCloudlet rcl : getCloudletWaitingList()) {
+            if (rcl.getCloudletId() == cloudletId) {
+                found = true;
+                break;
+            }
+            position++;
+        }
+
+        if (found) {
+            ResCloudlet resCloudlet = getCloudletWaitingList().remove(position);//从等待对列中把任务移除
+            resCloudlet.setCloudletStatus(Cloudlet.INEXEC);
+            getCloudletExecList().add(resCloudlet);
+
+            double cloudletLength = resCloudlet.getCloudletLength();
+            double estimatedFinishTime = CloudSim.clock()
+                    + cloudletLength / getCapacity(getCurrentMipsShare()) * resCloudlet.getNumberOfPes();
+            return estimatedFinishTime;
+        }
+
+        return 0.0;
+    }
+
+
     /**
      * Resumes execution of a paused cloudlet.
      *
@@ -315,18 +369,38 @@ public class CloudletSchedulerTimeShared extends CloudletScheduler {
     @Override
     public double cloudletSubmit(Cloudlet cloudlet, double fileTransferTime) {
         ResCloudlet rcl = new ResCloudlet(cloudlet);
-        rcl.setCloudletStatus(Cloudlet.INEXEC);
+//        rcl.setCloudletStatus(Cloudlet.INEXEC);
         for (int i = 0; i < cloudlet.getNumberOfPes(); i++) {
             rcl.setMachineAndPeId(0, i);
         }
 
-        getCloudletExecList().add(rcl);
+//        if (getCloudletExecList().size() >= 135)
+//            System.out.println("yeeeeeeeeeaaaaaaaaaaaaaaaaaaaaaaaaaaah!!!!!!!!!!!!!!!!!!!!!!");
 
-        // use the current capacity to estimate the extra amount of
-        // time to file transferring. It must be added to the cloudlet length
-        double extraSize = getCapacity(getCurrentMipsShare()) * fileTransferTime;
-        long length = (long) (cloudlet.getCloudletLength() + extraSize);
-        cloudlet.setCloudletLength(length);
+
+//        maxNumOfCloudletSynchronous = Integer.MAX_VALUE;
+//        double capacity = getCapacity(getCurrentMipsShare());
+//        double cloudLength = cloudlet.getCloudletLength();
+//        maxNumOfCloudletSynchronous = (int) (capacity / cloudLength);
+        //TODO: 设定任务执行队列最多只能存储1个任务，即同时只能处理1个任务
+        maxNumOfCloudletSynchronous = 1;
+        if (getCloudletExecList().size() > maxNumOfCloudletSynchronous) {
+            rcl.setCloudletStatus(Cloudlet.WAITED);
+            getCloudletWaitingList().add(rcl);
+            Collections.sort(cloudletWaitingList, new WaitingListComparator());
+            waitingListNum++;
+            System.out.println(waitingListNum);
+        } else {
+            rcl.setCloudletStatus(Cloudlet.INEXEC);
+            getCloudletExecList().add(rcl);
+
+            // use the current capacity to estimate the extra amount of time to file transferring. It must be added to the cloudlet length
+            // 使用当前容量来估计文件传输的额外时间。 必须将其添加到cloudlet长度中
+            double extraSize = getCapacity(getCurrentMipsShare()) * fileTransferTime;
+            long length = (long) (cloudlet.getCloudletLength() + extraSize);
+            cloudlet.setCloudletLength(length);
+        }
+
         return cloudlet.getCloudletLength() / getCapacity(getCurrentMipsShare());
     }
 
@@ -355,6 +429,13 @@ public class CloudletSchedulerTimeShared extends CloudletScheduler {
             }
         }
         for (ResCloudlet rcl : getCloudletPausedList()) {
+            if (rcl.getCloudletId() == cloudletId) {
+                return rcl.getCloudletStatus();
+            }
+        }
+
+        //TODO: 添加了等候队列中ResCloudet的状态获取
+        for (ResCloudlet rcl : getCloudletWaitingList()) {
             if (rcl.getCloudletId() == cloudletId) {
                 return rcl.getCloudletStatus();
             }
@@ -428,6 +509,15 @@ public class CloudletSchedulerTimeShared extends CloudletScheduler {
         ResCloudlet rgl = getCloudletExecList().remove(0);
         rgl.finalizeCloudlet();
         return rgl.getCloudlet();
+    }
+
+    @SuppressWarnings("unchecked")
+    protected <T extends ResCloudlet> List<T> getCloudletWaitingList() {
+        return (List<T>) cloudletWaitingList;
+    }
+
+    public <T extends ResCloudlet> void setCloudletWaitingList(List<T> cloudletWaitingList) {
+        this.cloudletWaitingList = cloudletWaitingList;
     }
 
     /**
@@ -552,4 +642,13 @@ public class CloudletSchedulerTimeShared extends CloudletScheduler {
         return bw;
     }
 
+    private class WaitingListComparator implements Comparator {
+        //升序排列(按照任务到达的顺序，对等待队列中的任务按照先后顺序排列)
+        @Override
+        public int compare(Object o1, Object o2) {
+            ResCloudlet resCloudlet1 = (ResCloudlet) o1;
+            ResCloudlet resCloudlet2 = (ResCloudlet) o2;
+            return (int) (resCloudlet1.getCloudletArrivalTime() - resCloudlet2.getCloudletArrivalTime());
+        }
+    }
 }

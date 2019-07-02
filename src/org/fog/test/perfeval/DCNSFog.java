@@ -33,6 +33,7 @@ import org.fog.utils.FogLinearPowerModel;
 import org.fog.utils.FogUtils;
 import org.fog.utils.TimeKeeper;
 import org.fog.utils.distribution.DeterministicDistribution;
+import org.fog.utils.distribution.NormalDistribution;
 
 /**
  * Simulation setup for case study 2 - Intelligent Surveillance
@@ -81,8 +82,10 @@ public class DCNSFog {
             //3.
             ModuleMapping moduleMapping = ModuleMapping.createModuleMapping(); // initializing a module mapping
             for (FogDevice device : fogDevices) {
-                if (device.getName().startsWith("m")) { // names of all Smart Cameras start with 'm'
+                if (device.getName().startsWith("m")/* || device.getName().startsWith("d")*/) { // names of all Smart Cameras start with 'm'
                     moduleMapping.addModuleToDevice("motion_detector", device.getName());  // fixing 1 instance of the Motion Detector module to each Smart Camera
+//                    moduleMapping.addModuleToDevice("object_detector", device.getName());
+//                    moduleMapping.addModuleToDevice("object_tracker", device.getName());
                 }
             }
             moduleMapping.addModuleToDevice("user_interface", "cloud"); // fixing instances of User Interface module in the Cloud
@@ -99,6 +102,7 @@ public class DCNSFog {
             controller.submitApplication(application,
                     (CLOUD) ? (new ModulePlacementMapping(fogDevices, application, moduleMapping))
                             : (new ModulePlacementEdgewards(fogDevices, sensors, actuators, application, moduleMapping)));
+//            controller.submitApplication(application, new ModulePlacementMapping(fogDevices, application, moduleMapping));
 
             //5.
             TimeKeeper.getInstance().setSimulationStartTime(Calendar.getInstance().getTimeInMillis());
@@ -179,14 +183,13 @@ public class DCNSFog {
             cameraList.get(i).setNeighborLatency(neighborLatency);
         }
 
-        for (String cameraId : cameraNeighborList.keySet()) {
-            System.out.println("[" + cameraId + "]:");
-            for (int j = 0; j < cameraNeighborList.size() - 1; j++) {
-                System.out.println(cameraNeighborList.get(cameraId).get(j).getName() + ": "
-                        + cameraNeighborList.get(cameraId).get(j).getNeighborLatency().get(j));
-            }
-        }
-
+//        for (String cameraId : cameraNeighborList.keySet()) {
+//            System.out.println("[" + cameraId + "]:");
+//            for (int j = 0; j < cameraNeighborList.size() - 1; j++) {
+//                System.out.println(cameraNeighborList.get(cameraId).get(j).getName() + ": "
+//                        + cameraNeighborList.get(cameraId).get(j).getNeighborLatency().get(j));
+//            }
+//        }
         router.setParentId(parentId);
         return router;
     }
@@ -194,7 +197,8 @@ public class DCNSFog {
     private static FogDevice addCamera(String id, int userId, String appId, int parentId) {
         FogDevice camera = createFogDevice("m-" + id, 500, 1000, 10000, 10000, 3, 0, 87.53, 82.44);
         camera.setParentId(parentId);
-        Sensor sensor = new Sensor("s-" + id, "CAMERA", userId, appId, new DeterministicDistribution(5)); // inter-transmission time of camera (sensor) follows a deterministic distribution
+        Sensor sensor = new Sensor("s-" + id, "CAMERA", userId, appId, new NormalDistribution(5, 1)); // inter-transmission time of camera (sensor) follows a deterministic distribution
+//        Sensor sensor = new Sensor("s-" + id, "CAMERA", userId, appId, new DeterministicDistribution(5)); // inter-transmission time of camera (sensor) follows a deterministic distribution
         sensors.add(sensor);
         Actuator ptz = new Actuator("ptz-" + id, userId, appId, "PTZ_CONTROL");
         actuators.add(ptz);

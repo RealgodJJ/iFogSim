@@ -176,7 +176,8 @@ public class Controller extends SimEntity {
 				count += 1;
 			}
 			System.out.println(getStringForLoopId(loopId) + " ---> "+(average/count));*/
-            System.out.println(getStringForLoopId(loopId) + " ---> " + TimeKeeper.getInstance().getLoopIdToCurrentAverage().get(loopId));
+            System.out.println(getStringForLoopId(loopId) + " ---> " + TimeKeeper.getInstance().getLoopIdToCurrentAverage().get(loopId)
+                    + " All task nums: " + TimeKeeper.getInstance().getLoopIdToCurrentNum().get(loopId));
         }
         System.out.println("=========================================");
         System.out.println("TUPLE CPU EXECUTION DELAY");
