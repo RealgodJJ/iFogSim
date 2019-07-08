@@ -29,6 +29,7 @@ import org.fog.placement.ModulePlacementEdgewards;
 import org.fog.placement.ModulePlacementMapping;
 import org.fog.policy.AppModuleAllocationPolicy;
 import org.fog.scheduler.StreamOperatorScheduler;
+import org.fog.scheduler.TupleScheduler;
 import org.fog.utils.FogLinearPowerModel;
 import org.fog.utils.FogUtils;
 import org.fog.utils.TimeKeeper;
@@ -87,6 +88,11 @@ public class DCNSFog {
 //                    moduleMapping.addModuleToDevice("object_detector", device.getName());
 //                    moduleMapping.addModuleToDevice("object_tracker", device.getName());
                 }
+
+                if (device.getName().startsWith("d")) {
+                    moduleMapping.addModuleToDevice("object_detector", device.getName());
+                    moduleMapping.addModuleToDevice("object_tracker", device.getName());
+                }
             }
             moduleMapping.addModuleToDevice("user_interface", "cloud"); // fixing instances of User Interface module in the Cloud
             if (CLOUD) {
@@ -99,10 +105,10 @@ public class DCNSFog {
             controller = new Controller("master-controller", fogDevices, sensors,
                     actuators);
 
-            controller.submitApplication(application,
-                    (CLOUD) ? (new ModulePlacementMapping(fogDevices, application, moduleMapping))
-                            : (new ModulePlacementEdgewards(fogDevices, sensors, actuators, application, moduleMapping)));
-//            controller.submitApplication(application, new ModulePlacementMapping(fogDevices, application, moduleMapping));
+//            controller.submitApplication(application,
+//                    (CLOUD) ? (new ModulePlacementMapping(fogDevices, application, moduleMapping))
+//                            : (new ModulePlacementEdgewards(fogDevices, sensors, actuators, application, moduleMapping)));
+            controller.submitApplication(application, new ModulePlacementMapping(fogDevices, application, moduleMapping));
 
             //5.
             TimeKeeper.getInstance().setSimulationStartTime(Calendar.getInstance().getTimeInMillis());
@@ -130,7 +136,7 @@ public class DCNSFog {
         FogDevice cloud = createFogDevice("cloud", 44800, 40000, 100, 10000, 0, 0.01, 16 * 103, 16 * 83.25);
         cloud.setParentId(-1);
         fogDevices.add(cloud);
-        FogDevice proxy = createFogDevice("proxy-server", 2800, 4000, 10000, 10000, 1, 0.0, 107.339, 83.4333);
+        FogDevice proxy = createFogDevice("proxy-server", 14000, 4000, 10000, 10000, 1, 0.0, 107.339, 83.4333);
         proxy.setParentId(cloud.getId());
         proxy.setUplinkLatency(100); // latency of connection between proxy server and cloud is 100 ms
         fogDevices.add(proxy);
@@ -142,7 +148,7 @@ public class DCNSFog {
 
     private static FogDevice addArea(String id, int userId, String appId, int parentId) {
         //邻居节点之间的传输带宽为5000
-        FogDevice router = createFogDevice("d-" + id, 2800, 4000, 10000, 10000, 5000, 1, 0.0, 107.339, 83.4333);
+        FogDevice router = createFogDevice("d-" + id, 14000, 4000, 10000, 10000, 5000, 1, 0.0, 107.339, 83.4333);
         fogDevices.add(router);
         router.setUplinkLatency(2); // latency of connection between router and proxy server is 2 ms
         for (int i = 0; i < numOfCamerasPerArea; i++) {
@@ -195,10 +201,10 @@ public class DCNSFog {
     }
 
     private static FogDevice addCamera(String id, int userId, String appId, int parentId) {
-        FogDevice camera = createFogDevice("m-" + id, 500, 1000, 10000, 10000, 3, 0, 87.53, 82.44);
+        FogDevice camera = createFogDevice("m-" + id, 5000, 1000, 10000, 10000, 5000, 3, 0, 87.53, 82.44);
         camera.setParentId(parentId);
-        Sensor sensor = new Sensor("s-" + id, "CAMERA", userId, appId, new NormalDistribution(5, 1)); // inter-transmission time of camera (sensor) follows a deterministic distribution
-//        Sensor sensor = new Sensor("s-" + id, "CAMERA", userId, appId, new DeterministicDistribution(5)); // inter-transmission time of camera (sensor) follows a deterministic distribution
+//        Sensor sensor = new Sensor("s-" + id, "CAMERA", userId, appId, new NormalDistribution(5, 1)); // inter-transmission time of camera (sensor) follows a deterministic distribution
+        Sensor sensor = new Sensor("s-" + id, "CAMERA", userId, appId, new DeterministicDistribution(5)); // inter-transmission time of camera (sensor) follows a deterministic distribution
         sensors.add(sensor);
         Actuator ptz = new Actuator("ptz-" + id, userId, appId, "PTZ_CONTROL");
         actuators.add(ptz);
@@ -336,10 +342,10 @@ public class DCNSFog {
         /*
          * Adding modules (vertices) to the application model (directed graph)
          */
-        application.addAppModule("object_detector", 10);
-        application.addAppModule("motion_detector", 10);
-        application.addAppModule("object_tracker", 10);
-        application.addAppModule("user_interface", 10);
+        TupleScheduler ts1 = application.addAppModule("object_detector", 10);
+        TupleScheduler ts2 = application.addAppModule("motion_detector", 10);
+        TupleScheduler ts3 = application.addAppModule("object_tracker", 10);
+        TupleScheduler ts4 = application.addAppModule("user_interface", 10);
 
         /*
          * Connecting the application modules (vertices) in the application model (directed graph) with edges

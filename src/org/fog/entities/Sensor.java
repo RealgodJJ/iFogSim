@@ -86,12 +86,12 @@ public class Sensor extends SimEntity {
     public void transmit() {
         AppEdge _edge = null;
 
-        int i = 0;
+//        int i = 0;
         for (AppEdge edge : getApp().getEdges()) {
-//            System.out.println("思考角度看上了APP:"+ edge.getTupleType() + i);
+//            System.out.println(edge.getTupleType() + ": " + i);
             if (edge.getSource().equals(getTupleType()))
                 _edge = edge;
-            i++;
+//            i++;
         }
         long cpuLength = (long) _edge.getTupleCpuLength();
         long nwLength = (long) _edge.getTupleNwLength();

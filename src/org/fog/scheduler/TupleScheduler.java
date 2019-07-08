@@ -42,4 +42,13 @@ public class TupleScheduler extends CloudletSchedulerTimeShared {
 //		getCloudletFinishedList().add(rcl);
 //	}
 
+
+    @Override
+    public String toString() {
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append("waitingListNum: ").append(getWaitingListNum());
+        stringBuilder.append("ExecListNum: ").append(getExecListNum());
+
+        return stringBuilder.toString();
+    }
 }

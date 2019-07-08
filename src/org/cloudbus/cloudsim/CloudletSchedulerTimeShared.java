@@ -25,6 +25,7 @@ import org.cloudbus.cloudsim.core.CloudSim;
 public class CloudletSchedulerTimeShared extends CloudletScheduler {
     private int maxNumOfCloudletSynchronous;
     private int waitingListNum;
+    private int execListNum;
 
     /**
      * The cloudlet waiting list.
@@ -92,7 +93,7 @@ public class CloudletSchedulerTimeShared extends CloudletScheduler {
         }
 
         //TODO: 将放入等待队列中的任务逐渐放入到执行队列中
-        WaitGiveBackToExec();
+//        WaitGiveBackToExec();
 
         if (getCloudletExecList().size() == 0) {
             setPreviousTime(currentTime);
@@ -377,29 +378,29 @@ public class CloudletSchedulerTimeShared extends CloudletScheduler {
 //        if (getCloudletExecList().size() >= 135)
 //            System.out.println("yeeeeeeeeeaaaaaaaaaaaaaaaaaaaaaaaaaaah!!!!!!!!!!!!!!!!!!!!!!");
 
-
-//        maxNumOfCloudletSynchronous = Integer.MAX_VALUE;
+        //TODO: 设定任务执行队列最多只能存储1个任务，即同时只能处理1个任务
 //        double capacity = getCapacity(getCurrentMipsShare());
 //        double cloudLength = cloudlet.getCloudletLength();
 //        maxNumOfCloudletSynchronous = (int) (capacity / cloudLength);
-        //TODO: 设定任务执行队列最多只能存储1个任务，即同时只能处理1个任务
-        maxNumOfCloudletSynchronous = 1;
-        if (getCloudletExecList().size() > maxNumOfCloudletSynchronous) {
-            rcl.setCloudletStatus(Cloudlet.WAITED);
-            getCloudletWaitingList().add(rcl);
-            Collections.sort(cloudletWaitingList, new WaitingListComparator());
-            waitingListNum++;
-            System.out.println(waitingListNum);
-        } else {
+////        maxNumOfCloudletSynchronous = 1;
+//        if (getCloudletExecList().size() >= 5) {
+//            rcl.setCloudletStatus(Cloudlet.WAITED);
+//            getCloudletWaitingList().add(rcl);
+//            Collections.sort(cloudletWaitingList, new WaitingListComparator());
+//            waitingListNum++;
+//            System.out.println(CloudSim.getEntityName(cloudlet.getVmId()) + "'s waitingListNum: " + waitingListNum);
+//        } else {
             rcl.setCloudletStatus(Cloudlet.INEXEC);
             getCloudletExecList().add(rcl);
+            execListNum++;
+//            System.out.println(CloudSim.getEntityName(cloudlet.getVmId()) + "'s execListNum: " + execListNum);
 
             // use the current capacity to estimate the extra amount of time to file transferring. It must be added to the cloudlet length
             // 使用当前容量来估计文件传输的额外时间。 必须将其添加到cloudlet长度中
             double extraSize = getCapacity(getCurrentMipsShare()) * fileTransferTime;
             long length = (long) (cloudlet.getCloudletLength() + extraSize);
             cloudlet.setCloudletLength(length);
-        }
+//        }
 
         return cloudlet.getCloudletLength() / getCapacity(getCurrentMipsShare());
     }
@@ -581,6 +582,14 @@ public class CloudletSchedulerTimeShared extends CloudletScheduler {
      */
     protected <T extends ResCloudlet> void setCloudletFinishedList(List<T> cloudletFinishedList) {
         this.cloudletFinishedList = cloudletFinishedList;
+    }
+
+    public int getWaitingListNum() {
+        return waitingListNum;
+    }
+
+    public int getExecListNum() {
+        return execListNum;
     }
 
     /*

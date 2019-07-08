@@ -19,7 +19,9 @@ public class Logger {
 	}
 	
 	public static void debug(String name, String message){
-		if(!ENABLED)
+		//TODO: Logger打印出所有执行的步骤
+//		if(!ENABLED)
+		if(ENABLED)
 			return;
 		if(Logger.LOG_LEVEL <= Logger.DEBUG)
 			System.out.println(df.format(CloudSim.clock())+" : "+name+" : "+message);

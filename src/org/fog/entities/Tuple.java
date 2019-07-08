@@ -25,6 +25,8 @@ public class Tuple extends Cloudlet{
 	private int actuatorId;
 	private int sourceDeviceId;
 	private int sourceModuleId;
+	//TODO：任务是否向邻居节点传递任务
+	private boolean isToNeighbor;
 	/**
 	 * Map to keep track of which module instances has a tuple traversed.
 	 * 
@@ -44,6 +46,16 @@ public class Tuple extends Cloudlet{
 		setDirection(direction);
 		setSourceDeviceId(-1);
 		setModuleCopyMap(new HashMap<String, Integer>());
+		//默认任务时不向邻居节点传递
+		setToNeighbor(false);
+	}
+
+	public boolean isToNeighbor() {
+		return isToNeighbor;
+	}
+
+	public void setToNeighbor(boolean toNeighbor) {
+		isToNeighbor = toNeighbor;
 	}
 
 	public int getActualTupleId() {

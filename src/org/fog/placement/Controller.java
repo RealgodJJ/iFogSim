@@ -207,9 +207,11 @@ public class Controller extends SimEntity {
         getAppLaunchDelays().put(application.getAppId(), delay);
         getAppModulePlacementPolicy().put(application.getAppId(), modulePlacement);
 
+        //将传感器和app关联
         for (Sensor sensor : sensors) {
             sensor.setApp(getApplications().get(sensor.getAppId()));
         }
+        //将执行器和app关联
         for (Actuator ac : actuators) {
             ac.setApp(getApplications().get(ac.getAppId()));
         }
