@@ -171,67 +171,67 @@ public class FogDevice extends PowerDataCenter {
                 System.lineSeparator());
     }
 
-    public FogDevice(String name, FogDeviceCharacteristics characteristics, VmAllocationPolicy vmAllocationPolicy,
-                     List<Storage> storageList, double schedulingInterval, double uplinkBandwidth, double downlinkBandwidth,
-                     double uplinkLatency, Map<Integer, Double> neighborLatency, double ratePerMips) throws Exception {
-        super(name, characteristics, vmAllocationPolicy, storageList, schedulingInterval);
-        setCharacteristics(characteristics);
-        setVmAllocationPolicy(vmAllocationPolicy);
-        setLastProcessTime(0.0);
-        setStorageList(storageList);
-        setVmList(new ArrayList<Vm>());
-        setSchedulingInterval(schedulingInterval);
-        setUplinkBandwidth(uplinkBandwidth);
-        setDownlinkBandwidth(downlinkBandwidth);
-        setUplinkLatency(uplinkLatency);
-        setNeighborLatency(neighborLatency);
-        setRatePerMips(ratePerMips);
-        setAssociatedActuatorIds(new ArrayList<Pair<Integer, Double>>());
-        for (Host host : getCharacteristics().getHostList()) {
-            host.setDataCenter(this);
-        }
-        setActiveApplications(new ArrayList<String>());
-        // If this resource doesn't have any PEs then no useful at all
-        if (getCharacteristics().getNumberOfPes() == 0) {
-            throw new Exception(super.getName()
-                    + " : Error - this entity has no PEs. Therefore, can't process any Cloudlets.");
-        }
-        // stores id of this class
-        getCharacteristics().setId(super.getId());
-
-        applicationMap = new HashMap<String, Application>();
-        appToModulesMap = new HashMap<String, List<String>>();
-        northTupleQueue = new LinkedList<Tuple>();
-        southTupleQueue = new LinkedList<Pair<Tuple, Integer>>();
-        setNorthLinkBusy(false);
-        setSouthLinkBusy(false);
-
-        setNeighborIds(new ArrayList<Integer>());
-        setChildrenIds(new ArrayList<Integer>());
-        setChildToOperatorsMap(new HashMap<Integer, List<String>>());
-
-        this.cloudTrafficMap = new HashMap<Integer, Integer>();
-
-        this.lockTime = 0;
-
-        this.energyConsumption = 0;
-        this.lastUtilization = 0;
-        setTotalCost(0);
-        setModuleInstanceCount(new HashMap<String, Map<String, Integer>>());
-        setChildToLatencyMap(new HashMap<Integer, Double>());
-
-        //TODO:添加FogDevice信息的打印
-        System.out.println("name:" + name + System.lineSeparator() +
-                "mips: " + characteristics.getHostList().get(0).getPeList().get(0).getPeProvisioner().getMips() + System.lineSeparator() +
-                "ram: " + characteristics.getHostList().get(0).getRamProvisioner().getRam() + System.lineSeparator() +
-                "upBw:" + uplinkBandwidth + System.lineSeparator() +
-                "downBw:" + downlinkBandwidth + System.lineSeparator() +
-                "level:" + level + System.lineSeparator() +
-                "ratePerMips:" + ratePerMips + System.lineSeparator() +
-                "busyPower: " + ((FogLinearPowerModel) ((PowerHost) characteristics.getHostList().get(0)).getPowerModel()).getMaxPower() + System.lineSeparator() +
-                "idlePower: " + ((FogLinearPowerModel) ((PowerHost) characteristics.getHostList().get(0)).getPowerModel()).getStaticPower() +
-                System.lineSeparator());
-    }
+//    public FogDevice(String name, FogDeviceCharacteristics characteristics, VmAllocationPolicy vmAllocationPolicy,
+//                     List<Storage> storageList, double schedulingInterval, double uplinkBandwidth, double downlinkBandwidth,
+//                     double uplinkLatency, Map<Integer, Double> neighborLatency, double ratePerMips) throws Exception {
+//        super(name, characteristics, vmAllocationPolicy, storageList, schedulingInterval);
+//        setCharacteristics(characteristics);
+//        setVmAllocationPolicy(vmAllocationPolicy);
+//        setLastProcessTime(0.0);
+//        setStorageList(storageList);
+//        setVmList(new ArrayList<Vm>());
+//        setSchedulingInterval(schedulingInterval);
+//        setUplinkBandwidth(uplinkBandwidth);
+//        setDownlinkBandwidth(downlinkBandwidth);
+//        setUplinkLatency(uplinkLatency);
+//        setNeighborLatency(neighborLatency);
+//        setRatePerMips(ratePerMips);
+//        setAssociatedActuatorIds(new ArrayList<Pair<Integer, Double>>());
+//        for (Host host : getCharacteristics().getHostList()) {
+//            host.setDataCenter(this);
+//        }
+//        setActiveApplications(new ArrayList<String>());
+//        // If this resource doesn't have any PEs then no useful at all
+//        if (getCharacteristics().getNumberOfPes() == 0) {
+//            throw new Exception(super.getName()
+//                    + " : Error - this entity has no PEs. Therefore, can't process any Cloudlets.");
+//        }
+//        // stores id of this class
+//        getCharacteristics().setId(super.getId());
+//
+//        applicationMap = new HashMap<String, Application>();
+//        appToModulesMap = new HashMap<String, List<String>>();
+//        northTupleQueue = new LinkedList<Tuple>();
+//        southTupleQueue = new LinkedList<Pair<Tuple, Integer>>();
+//        setNorthLinkBusy(false);
+//        setSouthLinkBusy(false);
+//
+//        setNeighborIds(new ArrayList<Integer>());
+//        setChildrenIds(new ArrayList<Integer>());
+//        setChildToOperatorsMap(new HashMap<Integer, List<String>>());
+//
+//        this.cloudTrafficMap = new HashMap<Integer, Integer>();
+//
+//        this.lockTime = 0;
+//
+//        this.energyConsumption = 0;
+//        this.lastUtilization = 0;
+//        setTotalCost(0);
+//        setModuleInstanceCount(new HashMap<String, Map<String, Integer>>());
+//        setChildToLatencyMap(new HashMap<Integer, Double>());
+//
+//        //TODO:添加FogDevice信息的打印
+//        System.out.println("name:" + name + System.lineSeparator() +
+//                "mips: " + characteristics.getHostList().get(0).getPeList().get(0).getPeProvisioner().getMips() + System.lineSeparator() +
+//                "ram: " + characteristics.getHostList().get(0).getRamProvisioner().getRam() + System.lineSeparator() +
+//                "upBw:" + uplinkBandwidth + System.lineSeparator() +
+//                "downBw:" + downlinkBandwidth + System.lineSeparator() +
+//                "level:" + level + System.lineSeparator() +
+//                "ratePerMips:" + ratePerMips + System.lineSeparator() +
+//                "busyPower: " + ((FogLinearPowerModel) ((PowerHost) characteristics.getHostList().get(0)).getPowerModel()).getMaxPower() + System.lineSeparator() +
+//                "idlePower: " + ((FogLinearPowerModel) ((PowerHost) characteristics.getHostList().get(0)).getPowerModel()).getStaticPower() +
+//                System.lineSeparator());
+//    }
 
     //DCNSFog的第二种调用
     public FogDevice(String name, FogDeviceCharacteristics characteristics, VmAllocationPolicy vmAllocationPolicy,
@@ -634,11 +634,13 @@ public class FogDevice extends PowerDataCenter {
                         TimeKeeper.getInstance().tupleEndedExecution(tuple);
                         Application application = getApplicationMap().get(tuple.getAppId());
                         Logger.debug(getName(), "Completed execution of tuple " + tuple.getCloudletId() + " on " + tuple.getDestModuleName());
-                        List<Tuple> resultantTuples = application.getResultantTuples(tuple.getDestModuleName(), tuple, getId(), vm.getId());
+
+                        //实现tuple之间的交接
+                        List<Tuple> resultantTuples = application.getResultantTuples(tuple.getDestModuleName(), tuple, getId(), vm.getId(), tuple.getBeginDeviceId());
                         for (Tuple resTuple : resultantTuples) {
                             resTuple.setModuleCopyMap(new HashMap<String, Integer>(tuple.getModuleCopyMap()));
                             resTuple.getModuleCopyMap().put(((AppModule) vm).getName(), vm.getId());
-                            updateTimingsOnSending(resTuple);
+                            updateTimingsOnSending(resTuple);   //在以前收到的tuple生成一个Tuple时更新时间
                             sendToSelf(resTuple);
                         }
                         sendNow(cl.getUserId(), CloudSimTags.CLOUDLET_RETURN, cl);
@@ -651,7 +653,7 @@ public class FogDevice extends PowerDataCenter {
     }
 
     protected void updateTimingsOnSending(Tuple resTuple) {
-        // TODO ADD CODE FOR UPDATING TIMINGS WHEN A TUPLE IS GENERATED FROM A PREVIOUSLY RECIEVED TUPLE.
+        // TODO ADD CODE FOR UPDATING TIMINGS WHEN A TUPLE IS GENERATED FROM A PREVIOUSLY RECEIVED TUPLE.
         // WILL NEED TO CHECK IF A NEW LOOP STARTS AND INSERT A UNIQUE TUPLE ID TO IT.
         String srcModule = resTuple.getSrcModuleName();
         String destModule = resTuple.getDestModuleName();
@@ -802,6 +804,7 @@ public class FogDevice extends PowerDataCenter {
                 return;
             }
         }
+
         for (int childId : getChildrenIds()) {
             sendDown(tuple, childId);
         }
@@ -811,6 +814,7 @@ public class FogDevice extends PowerDataCenter {
     // 接收传来的元组
     protected void processTupleArrival(SimEvent ev) {
         Tuple tuple = (Tuple) ev.getData();
+
 
 //        isProcessByItself(tuple);
 
@@ -843,22 +847,16 @@ public class FogDevice extends PowerDataCenter {
 //            sendNeighbor(tuple, minNeighborId);
 //        }
 
-
         if (getName().equals("cloud")) {
             updateCloudTraffic();
         }
-		
+
 		/*if(getName().equals("d-0") && tuple.getTupleType().equals("_SENSOR")){
 			System.out.println(++numClients);
 		}*/
         Logger.debug(getName(), "Received tuple " + tuple.getCloudletId() + " with tupleType = " + tuple.getTupleType() + "\t| Source : " +
                 CloudSim.getEntityName(ev.getSource()) + "|Dest : " + CloudSim.getEntityName(ev.getDestination()));
 
-        //TODO:消息传递打印
-//        System.out.println("==== processTupleArrival ====");
-//        System.out.println(getName() + "\nFogEvent Tag:" + ev.getTag() + " | Received tuple " + +tuple.getCloudletId() + " with tupleType = " + tuple.getTupleType() +
-//                " | Source : " + CloudSim.getEntityName(ev.getSource()) + " or " + tuple.getSrcModuleName() +
-//                " | Dest : " + CloudSim.getEntityName(ev.getDestination()) + " or " + tuple.getDestModuleName() + "\n");
 
         // 给上传的原模块给予反馈
         send(ev.getSource(), CloudSim.getMinTimeBetweenEvents(), FogEvents.TUPLE_ACK);
@@ -869,6 +867,7 @@ public class FogDevice extends PowerDataCenter {
         //判断是否将任务传递给执行器（也就是任务是否结束）
         if (tuple.getDirection() == Tuple.ACTUATOR) {
             sendTupleToActuator(tuple);
+            //System.err.println(this.getName() + ": " + tuple.getCloudletId());
             return;
         }
 
@@ -894,14 +893,15 @@ public class FogDevice extends PowerDataCenter {
         }
 
         //TODO: 添加一个向邻居节点发送tuple的情况(id号不为3的倍数时，将任务tuple发送到邻居节点，即不在本地进行处理)
-        if (tuple.getCloudletId() % 3 != 0 && CloudSim.getEntityName(this.getId()).startsWith("m")) {
+        if (tuple.getCloudletId() % 3 != 0 && tuple.getTupleType().equals("CAMERA")) {
             targetNeighborId = neighborIds.get(tuple.getCloudletId() % 3 - 1);
             tuple.setToNeighbor(true);
         }
 
         if (appToModulesMap.containsKey(tuple.getAppId())) {
             //包含该元组应用的所有模块是否能够匹配该元组的目的模块
-            if (appToModulesMap.get(tuple.getAppId()).contains(tuple.getDestModuleName()) && !tuple.isToNeighbor()) {
+            if ((appToModulesMap.get(tuple.getAppId()).contains(tuple.getDestModuleName()) && !tuple.isToNeighbor()) ||
+                    (appToModulesMap.get(tuple.getAppId()).contains(tuple.getDestModuleName()) && tuple.isFromNeighbor())) {
                 int vmId = -1;
                 for (Vm vm : getHost().getVmList()) {
                     if (((AppModule) vm).getName().equals(tuple.getDestModuleName()))
@@ -913,6 +913,7 @@ public class FogDevice extends PowerDataCenter {
                     return;
                 }
                 tuple.setVmId(vmId);
+
                 //Logger.error(getName(), "Executing tuple for operator " + moduleName);
 
                 //没有到达一个循环的结尾是不会更新时间戳的，因为没有完成一个测试循环
@@ -920,11 +921,14 @@ public class FogDevice extends PowerDataCenter {
 
                 executeTuple(ev, tuple.getDestModuleName());
             } else if (tuple.getDestModuleName() != null) {
-                if (tuple.getDirection() == Tuple.UP && !tuple.isToNeighbor())
-                    sendUp(tuple);
-                else if (tuple.getDirection() == Tuple.DOWN) {
+                if (tuple.getDirection() == Tuple.DOWN) {
+//                    if (getName().startsWith("d-3")) {
+//                        System.out.println("used  " + tuple.getDestModuleName() + tuple.getDirection());
+//                    }
                     for (int childId : getChildrenIds())
                         sendDown(tuple, childId);
+                } else if (tuple.getDirection() == Tuple.UP && !tuple.isToNeighbor()) {
+                    sendUp(tuple);
                 } else if (tuple.getDirection() == Tuple.UP && tuple.isToNeighbor()) { //如果该节点在此步骤向邻居节点发送任务tuple
                     for (int neighborId : getNeighborIds()) {
                         if (targetNeighborId == neighborId) {
@@ -938,31 +942,32 @@ public class FogDevice extends PowerDataCenter {
                 sendUp(tuple);
             }
         } else {
-            if (tuple.getDirection() == Tuple.UP)
+            if (tuple.getDirection() == Tuple.UP) {
                 sendUp(tuple);
-            else if (tuple.getDirection() == Tuple.DOWN) {
+            } else if (tuple.getDirection() == Tuple.DOWN) {
+//                if (getName().startsWith("d-3")) {
+//                    System.out.println("used  " + tuple.getDestModuleName() + tuple.getDirection());
+//                }
                 for (int childId : getChildrenIds())
                     sendDown(tuple, childId);
-            } else if (tuple.getDirection() == Tuple.NEIGHBOR) {
-                for (int neighborId : getNeighborIds())
-                    sendNeighbor(tuple, neighborId);
+//                }
             }
         }
     }
 
-    //TODO: 是否有设备本身来处理这个tuple
-    private boolean isProcessByItself(Tuple tuple) {
-        boolean canBe = false;
-        //获取执行tuple的appModule
-        AppModule module = getModuleByName(tuple.getDestModuleName());
-        //Vm vmModule = new Vm();
-        for (final Vm vm : getHost().getVmList()) {                //寻找该module
-            if (((AppModule) vm).getName().equals(tuple.getDestModuleName())) {
-                int num = vm.getCloudletScheduler().runningCloudlets();
-                if (vm.getCloudletScheduler().runningCloudlets() < 1) {
-                    return true;
-                }
-                double networkDelay = tuple.getCloudletFileSize() / getNeighborBandwidth();
+//    //TODO: 是否有设备本身来处理这个tuple
+//    private boolean isProcessByItself(Tuple tuple) {
+//        boolean canBe = false;
+//        //获取执行tuple的appModule
+//        AppModule module = getModuleByName(tuple.getDestModuleName());
+//        //Vm vmModule = new Vm();
+//        for (final Vm vm : getHost().getVmList()) {                //寻找该module
+//            if (((AppModule) vm).getName().equals(tuple.getDestModuleName())) {
+//                int num = vm.getCloudletScheduler().runningCloudlets();
+//                if (vm.getCloudletScheduler().runningCloudlets() < 1) {
+//                    return true;
+//                }
+//                double networkDelay = tuple.getCloudletFileSize() / getNeighborBandwidth();
 //                double capacity = vm.getCloudletScheduler().getVmCapacity(getVmAllocationPolicy().getHost(module).getVmScheduler()
 //                        .getAllocatedMipsForVm(module));
 //                double totalCapacity = getVmAllocationPolicy().getHost(module).getVmScheduler().getTotalAllocatedMipsForVm(module);
@@ -971,13 +976,13 @@ public class FogDevice extends PowerDataCenter {
 //                if (predictTime > 5 * (networkDelay + getNeighborLatency())) {
 //                    return false;
 //                }
-                return true;
-            }
-        }
-        //vmModule.getCloudletScheduler().get
-
-        return canBe;
-    }
+//                return true;
+//            }
+//        }
+//        //vmModule.getCloudletScheduler().get
+//
+//        return canBe;
+//    }
 
     protected void updateTimingsOnReceipt(Tuple tuple) {
         Application app = getApplicationMap().get(tuple.getAppId());
@@ -1031,7 +1036,7 @@ public class FogDevice extends PowerDataCenter {
                 instances = Math.max(module.getDownInstanceIdsMaps().get(_moduleName).size(), instances);
             }
             module.setNumInstances(instances);
-        } else if (/*tuple.getDirection() == Tuple.NEIGHBOR*/tuple.getDirection() == Tuple.UP && tuple.isToNeighbor()) {
+        } else if (tuple.getDirection() == Tuple.UP && tuple.isToNeighbor()) {
             //TODO: 如果任务是向上传递但任务传递给邻居节点则执行以下操作
             //TODO：tuple发送到周围的邻接边缘节点中执行
             String srcModule = tuple.getSrcModuleName();
@@ -1131,7 +1136,7 @@ public class FogDevice extends PowerDataCenter {
 
     protected void sendDownFreeLink(Tuple tuple, int childId) {
         double networkDelay = tuple.getCloudletFileSize() / getDownlinkBandwidth();
-        //Logger.debug(getName(), "Sending tuple with tupleType = "+tuple.getTupleType()+" DOWN");
+        Logger.debug(getName(), "Sending tuple " + tuple.getCloudletId() + " with tupleType = " + tuple.getTupleType() + " DOWN");
         //TODO: 只把tuple传输给一个south子节点，为什么就说"南连接"处于繁忙阶段
         setSouthLinkBusy(true);
         double latency = getChildToLatencyMap().get(childId);
@@ -1153,9 +1158,9 @@ public class FogDevice extends PowerDataCenter {
     protected void updateNeighborTupleQueue() {
         if (!getSouthTupleQueue().isEmpty()) {
             Pair<Tuple, Integer> pair = getSouthTupleQueue().poll();
-            sendDownFreeLink(pair.getFirst(), pair.getSecond());
+            sendNeighborFreeLink(pair.getFirst(), pair.getSecond());
         } else {
-            setSouthLinkBusy(false);
+            setNeighborLinkBusy(false);
         }
 //        System.out.println("==== updateNeighborTupleQueue ====");
     }
@@ -1166,6 +1171,7 @@ public class FogDevice extends PowerDataCenter {
         double latency = getNeighborToLatencyMap().get(neighborId);
         send(getId(), networkDelay, FogEvents.UPDATE_NEIGHBOR_TUPLE_QUEUE);
         send(neighborId, networkDelay + latency, FogEvents.TUPLE_ARRIVAL, tuple);
+        tuple.setFromNeighbor(true);
         NetworkUsageMonitor.sendingTuple(latency, tuple.getCloudletFileSize());
     }
 
@@ -1175,6 +1181,7 @@ public class FogDevice extends PowerDataCenter {
             if (!isNeighborLinkBusy()) {
                 sendNeighborFreeLink(tuple, neighborId);
             } else {
+                tuple.setFromNeighbor(true);
                 neighborTupleQueue.add(new Pair<>(tuple, neighborId));
             }
         }

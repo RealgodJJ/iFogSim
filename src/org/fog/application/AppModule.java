@@ -21,6 +21,7 @@ public class AppModule extends PowerVm {
 
     private String name;
     private String appId;
+    //执行下一步任务流的路径
     private Map<Pair<String, String>, SelectivityModel> selectivityMap;
 
     //专利：最大延迟容忍时间dtk

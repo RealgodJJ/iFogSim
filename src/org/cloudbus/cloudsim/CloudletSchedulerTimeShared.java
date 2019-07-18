@@ -370,11 +370,12 @@ public class CloudletSchedulerTimeShared extends CloudletScheduler {
     @Override
     public double cloudletSubmit(Cloudlet cloudlet, double fileTransferTime) {
         ResCloudlet rcl = new ResCloudlet(cloudlet);
-//        rcl.setCloudletStatus(Cloudlet.INEXEC);
+        rcl.setCloudletStatus(Cloudlet.INEXEC);
         for (int i = 0; i < cloudlet.getNumberOfPes(); i++) {
             rcl.setMachineAndPeId(0, i);
         }
 
+        getCloudletExecList().add(rcl);
 //        if (getCloudletExecList().size() >= 135)
 //            System.out.println("yeeeeeeeeeaaaaaaaaaaaaaaaaaaaaaaaaaaah!!!!!!!!!!!!!!!!!!!!!!");
 
@@ -390,16 +391,16 @@ public class CloudletSchedulerTimeShared extends CloudletScheduler {
 //            waitingListNum++;
 //            System.out.println(CloudSim.getEntityName(cloudlet.getVmId()) + "'s waitingListNum: " + waitingListNum);
 //        } else {
-            rcl.setCloudletStatus(Cloudlet.INEXEC);
-            getCloudletExecList().add(rcl);
-            execListNum++;
+//            rcl.setCloudletStatus(Cloudlet.INEXEC);
+//            getCloudletExecList().add(rcl);
+//            execListNum++;
 //            System.out.println(CloudSim.getEntityName(cloudlet.getVmId()) + "'s execListNum: " + execListNum);
 
-            // use the current capacity to estimate the extra amount of time to file transferring. It must be added to the cloudlet length
-            // 使用当前容量来估计文件传输的额外时间。 必须将其添加到cloudlet长度中
-            double extraSize = getCapacity(getCurrentMipsShare()) * fileTransferTime;
-            long length = (long) (cloudlet.getCloudletLength() + extraSize);
-            cloudlet.setCloudletLength(length);
+        // use the current capacity to estimate the extra amount of time to file transferring. It must be added to the cloudlet length
+        // 使用当前容量来估计文件传输的额外时间。 必须将其添加到cloudlet长度中
+        double extraSize = getCapacity(getCurrentMipsShare()) * fileTransferTime;
+        long length = (long) (cloudlet.getCloudletLength() + extraSize);
+        cloudlet.setCloudletLength(length);
 //        }
 
         return cloudlet.getCloudletLength() / getCapacity(getCurrentMipsShare());

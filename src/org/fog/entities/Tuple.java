@@ -13,7 +13,7 @@ public class Tuple extends Cloudlet{
 	public static final int DOWN = 2;
 	public static final int ACTUATOR = 3;
 	//TODO：添加邻居节点传输的方式
-	public static final int NEIGHBOR = 4;
+//	public static final int NEIGHBOR = 4;
 	
 	private String appId;
 	
@@ -27,6 +27,8 @@ public class Tuple extends Cloudlet{
 	private int sourceModuleId;
 	//TODO：任务是否向邻居节点传递任务
 	private boolean isToNeighbor;
+	private boolean isFromNeighbor;
+	private int beginDeviceId;
 	/**
 	 * Map to keep track of which module instances has a tuple traversed.
 	 * 
@@ -46,8 +48,10 @@ public class Tuple extends Cloudlet{
 		setDirection(direction);
 		setSourceDeviceId(-1);
 		setModuleCopyMap(new HashMap<String, Integer>());
-		//默认任务时不向邻居节点传递
+		//默认任务不向邻居节点传递
 		setToNeighbor(false);
+		//默认任务不是从邻居节点传递
+		setFromNeighbor(false);
 	}
 
 	public boolean isToNeighbor() {
@@ -56,6 +60,22 @@ public class Tuple extends Cloudlet{
 
 	public void setToNeighbor(boolean toNeighbor) {
 		isToNeighbor = toNeighbor;
+	}
+
+	public boolean isFromNeighbor() {
+		return isFromNeighbor;
+	}
+
+	public void setFromNeighbor(boolean fromNeighbor) {
+		isFromNeighbor = fromNeighbor;
+	}
+
+	public int getBeginDeviceId() {
+		return beginDeviceId;
+	}
+
+	public void setBeginDeviceId(int beginDeviceId) {
+		this.beginDeviceId = beginDeviceId;
 	}
 
 	public int getActualTupleId() {

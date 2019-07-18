@@ -91,15 +91,15 @@ public abstract class CloudletScheduler {
 	 */
 	public abstract boolean cloudletPause(int clId);
 
-	/**
-	 * Starts an cloudlet in waitingList.
-	 *
-	 * @param clId Id of the cloudlet being started
-	 * @return expected finish time of this cloudlet, or 0 if it is in a waiting queue
-	 * @pre gl != null
-	 * @post $none
-	 */
-	public abstract double cloudletRestart(int clId);
+//	/**
+//	 * Starts an cloudlet in waitingList.
+//	 *
+//	 * @param clId Id of the cloudlet being started
+//	 * @return expected finish time of this cloudlet, or 0 if it is in a waiting queue
+//	 * @pre gl != null
+//	 * @post $none
+//	 */
+//	public abstract double cloudletRestart(int clId);
 
 	/**
 	 * Resumes execution of a paused cloudlet.

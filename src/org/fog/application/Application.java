@@ -59,21 +59,17 @@ public class Application {
      * @param moduleName
      * @param ram
      */
-    public TupleScheduler addAppModule(String moduleName, int ram) {
+    public void addAppModule(String moduleName, int ram) {
         int mips = 1000;
         long size = 10000;
         long bw = 1000;
         String vmm = "Xen";
 
-        TupleScheduler tupleScheduler = new TupleScheduler(mips, 1);
-        System.out.println(tupleScheduler);
-
         AppModule module = new AppModule(FogUtils.generateEntityId(), moduleName, appId, userId,
-                mips, ram, bw, size, vmm, tupleScheduler, new HashMap<Pair<String, String>, SelectivityModel>());
+                mips, ram, bw, size, vmm, new TupleScheduler(mips, 1), new HashMap<Pair<String, String>, SelectivityModel>());
 
         getModules().add(module);
 
-        return tupleScheduler;
     }
 
     public void addAppModule(String moduleName, int ram, int mips, long size, long bw) {
@@ -192,17 +188,18 @@ public class Application {
      * @param sourceDeviceId
      * @return
      */
-    public List<Tuple> getResultantTuples(String moduleName, Tuple inputTuple, int sourceDeviceId, int sourceModuleId) {
+    public List<Tuple> getResultantTuples(String moduleName, Tuple inputTuple, int sourceDeviceId, int sourceModuleId, int beginDeviceId) {
         List<Tuple> tuples = new ArrayList<Tuple>();
         AppModule module = getModuleByName(moduleName);
         for (AppEdge edge : getEdges()) {
             if (edge.getSource().equals(moduleName)) {
+                //创建一个任务变化对<上一个任务，下一个任务>
                 Pair<String, String> pair = new Pair<String, String>(inputTuple.getTupleType(), edge.getTupleType());
 
                 if (module.getSelectivityMap().get(pair) == null)
                     continue;
                 SelectivityModel selectivityModel = module.getSelectivityMap().get(pair);
-                if (selectivityModel.canSelect()) {
+                if (selectivityModel.canSelect()) { //此处需要判断该环节的tuple是需要进行到哪个分支作为下一阶段的任务
                     //TODO check if the edge is ACTUATOR, then create multiple tuples
                     if (edge.getEdgeType() == AppEdge.ACTUATOR) {
                         //for(Integer actuatorId : module.getActuatorSubscriptions().get(edge.getTupleType())){
@@ -225,19 +222,18 @@ public class Application {
                         tuple.setSourceDeviceId(sourceDeviceId);
                         tuple.setSourceModuleId(sourceModuleId);
                         //tuple.setActuatorId(actuatorId);
-
+                        //TODO: 添加一个源设备的id,以便于最终完成的tuple能够返回源设备
+                        tuple.setBeginDeviceId(beginDeviceId);
                         tuples.add(tuple);
+
                         //}
                     } else {
+                        //创建新的任务tuple以执行下一阶段的任务
                         Tuple tuple = new Tuple(appId, FogUtils.generateTupleId(), edge.getDirection(),
-                                (long) (edge.getTupleCpuLength()),
-                                inputTuple.getNumberOfPes(),
-                                (long) (edge.getTupleNwLength()),
-                                inputTuple.getCloudletOutputSize(),
-                                inputTuple.getUtilizationModelCpu(),
-                                inputTuple.getUtilizationModelRam(),
-                                inputTuple.getUtilizationModelBw()
-                        );
+                                (long) (edge.getTupleCpuLength()), inputTuple.getNumberOfPes(), (long) (edge.getTupleNwLength()),
+                                inputTuple.getCloudletOutputSize(), inputTuple.getUtilizationModelCpu(),
+                                inputTuple.getUtilizationModelRam(), inputTuple.getUtilizationModelBw());
+                        //此步骤实现的是actualTupleId在任务之间的传承
                         tuple.setActualTupleId(inputTuple.getActualTupleId());
                         tuple.setUserId(inputTuple.getUserId());
                         tuple.setAppId(inputTuple.getAppId());
@@ -246,6 +242,8 @@ public class Application {
                         tuple.setDirection(edge.getDirection());
                         tuple.setTupleType(edge.getTupleType());
                         tuple.setSourceModuleId(sourceModuleId);
+                        //TODO: 添加一个源设备的id,以便于最终完成的tuple能够返回源设备
+                        tuple.setBeginDeviceId(beginDeviceId);
 
                         tuples.add(tuple);
                     }
@@ -267,14 +265,8 @@ public class Application {
         if (edge.getEdgeType() == AppEdge.ACTUATOR) {
             for (Integer actuatorId : module.getActuatorSubscriptions().get(edge.getTupleType())) {
                 Tuple tuple = new Tuple(appId, FogUtils.generateTupleId(), edge.getDirection(),
-                        (long) (edge.getTupleCpuLength()),
-                        1,
-                        (long) (edge.getTupleNwLength()),
-                        100,
-                        new UtilizationModelFull(),
-                        new UtilizationModelFull(),
-                        new UtilizationModelFull()
-                );
+                        (long) (edge.getTupleCpuLength()), 1, (long) (edge.getTupleNwLength()), 100,
+                        new UtilizationModelFull(), new UtilizationModelFull(), new UtilizationModelFull());
                 tuple.setUserId(getUserId());
                 tuple.setAppId(getAppId());
                 tuple.setDestModuleName(edge.getDestination());
@@ -289,14 +281,8 @@ public class Application {
             }
         } else {
             Tuple tuple = new Tuple(appId, FogUtils.generateTupleId(), edge.getDirection(),
-                    (long) (edge.getTupleCpuLength()),
-                    1,
-                    (long) (edge.getTupleNwLength()),
-                    100,
-                    new UtilizationModelFull(),
-                    new UtilizationModelFull(),
-                    new UtilizationModelFull()
-            );
+                    (long) (edge.getTupleCpuLength()), 1, (long) (edge.getTupleNwLength()), 100,
+                    new UtilizationModelFull(), new UtilizationModelFull(), new UtilizationModelFull());
             //tuple.setActualTupleId(inputTuple.getActualTupleId());
             tuple.setUserId(getUserId());
             tuple.setAppId(getAppId());

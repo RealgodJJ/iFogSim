@@ -3,7 +3,6 @@ package org.fog.test.perfeval;
 import java.math.BigDecimal;
 import java.util.*;
 
-import com.sun.javafx.collections.MappingChange;
 import org.cloudbus.cloudsim.Host;
 import org.cloudbus.cloudsim.Log;
 import org.cloudbus.cloudsim.Pe;
@@ -25,16 +24,13 @@ import org.fog.entities.Sensor;
 import org.fog.entities.Tuple;
 import org.fog.placement.Controller;
 import org.fog.placement.ModuleMapping;
-import org.fog.placement.ModulePlacementEdgewards;
 import org.fog.placement.ModulePlacementMapping;
 import org.fog.policy.AppModuleAllocationPolicy;
 import org.fog.scheduler.StreamOperatorScheduler;
-import org.fog.scheduler.TupleScheduler;
 import org.fog.utils.FogLinearPowerModel;
 import org.fog.utils.FogUtils;
 import org.fog.utils.TimeKeeper;
 import org.fog.utils.distribution.DeterministicDistribution;
-import org.fog.utils.distribution.NormalDistribution;
 
 /**
  * Simulation setup for case study 2 - Intelligent Surveillance
@@ -45,12 +41,17 @@ public class DCNSFog {
     private static List<FogDevice> fogDevices = new ArrayList<FogDevice>();
     private static List<Sensor> sensors = new ArrayList<Sensor>();
     private static List<Actuator> actuators = new ArrayList<Actuator>();
+    private static List<FogDevice> areaList = new ArrayList<>();
     private static List<FogDevice> cameraList = new ArrayList<>();
-    private static int numOfAreas = 1;
-    private static int numOfCamerasPerArea = 3;
+    private static int numOfCameraAreas = 3;
+    private static int numOfCamerasPerCameraArea = 3;
+    private static int numOfCureAreas = 1;
+    private static int numOfClientsPerCureArea = 4;
+
 
     //用于暂存每个边缘节点的邻居节点和延时之间的映射
-    private static Map<Integer, Double> neighborLatency;
+    private static Map<Integer, Double> areaNeighborLatency;
+    private static Map<Integer, Double> cameraNeighborLatency;
 
     private static boolean CLOUD = false;
 
@@ -68,33 +69,48 @@ public class DCNSFog {
 
 
             //2.为应用设置名称并创建数据中心
-            String appId = "dcns"; // identifier of the application
+            String appId1 = "dcns"; // identifier of the application
+            String appId2 = "cure"; // identifier of the application
             FogBroker broker = new FogBroker("broker");
 
             //3.创建应用
-            Application application = createApplication(appId, broker.getId());
-            application.setUserId(broker.getId());
+            Application cameraApplication = createCameraApplication(appId1, broker.getId());
+            cameraApplication.setUserId(broker.getId());
+            Application clientApplication = createClientApplication(appId2, broker.getId());
+            clientApplication.setUserId(broker.getId());
 
             //2.
-            createFogDevices(broker.getId(), appId);
+            createFogDevicesForAll(broker.getId(), appId1, appId2);
 
             Controller controller = null;
 
             //3.
             ModuleMapping moduleMapping = ModuleMapping.createModuleMapping(); // initializing a module mapping
+            ModuleMapping moduleMapping1 = ModuleMapping.createModuleMapping(); // initializing a module mapping
             for (FogDevice device : fogDevices) {
-                if (device.getName().startsWith("m")/* || device.getName().startsWith("d")*/) { // names of all Smart Cameras start with 'm'
+                if (device.getName().startsWith("m")) { // names of all Smart Cameras start with 'm'
                     moduleMapping.addModuleToDevice("motion_detector", device.getName());  // fixing 1 instance of the Motion Detector module to each Smart Camera
 //                    moduleMapping.addModuleToDevice("object_detector", device.getName());
 //                    moduleMapping.addModuleToDevice("object_tracker", device.getName());
                 }
 
-                if (device.getName().startsWith("d")) {
+                if (device.getName().startsWith("n")) {
+                    moduleMapping1.addModuleToDevice("patient_client", device.getName());
+                }
+
+                if (device.getName().startsWith("d-3")) {
+                    moduleMapping1.addModuleToDevice("data_analysis", device.getName());
+                    moduleMapping1.addModuleToDevice("diagnostic_module", device.getName());
+                } else if (device.getName().startsWith("d")) {
                     moduleMapping.addModuleToDevice("object_detector", device.getName());
                     moduleMapping.addModuleToDevice("object_tracker", device.getName());
                 }
             }
             moduleMapping.addModuleToDevice("user_interface", "cloud"); // fixing instances of User Interface module in the Cloud
+            //TODO: 将所有的计算模块添加到云端，以保证有些任务需要在云端进行执行
+//            moduleMapping.addModuleToDevice("motion_detector", "cloud");
+//            moduleMapping.addModuleToDevice("object_detector", "cloud");
+//            moduleMapping.addModuleToDevice("object_tracker", "cloud");
             if (CLOUD) {
                 // if the mode of deployment is cloud-based
                 moduleMapping.addModuleToDevice("object_detector", "cloud"); // placing all instances of Object Detector module in the Cloud
@@ -102,13 +118,13 @@ public class DCNSFog {
             }
 
             //4.
-            controller = new Controller("master-controller", fogDevices, sensors,
-                    actuators);
+            controller = new Controller("master-controller", fogDevices, sensors, actuators);
 
 //            controller.submitApplication(application,
 //                    (CLOUD) ? (new ModulePlacementMapping(fogDevices, application, moduleMapping))
 //                            : (new ModulePlacementEdgewards(fogDevices, sensors, actuators, application, moduleMapping)));
-            controller.submitApplication(application, new ModulePlacementMapping(fogDevices, application, moduleMapping));
+            controller.submitApplication(cameraApplication, new ModulePlacementMapping(fogDevices, cameraApplication, moduleMapping));
+            controller.submitApplication(clientApplication, new ModulePlacementMapping(fogDevices, clientApplication, moduleMapping1));
 
             //5.
             TimeKeeper.getInstance().setSimulationStartTime(Calendar.getInstance().getTimeInMillis());
@@ -130,9 +146,9 @@ public class DCNSFog {
      * Creates the fog devices in the physical topology of the simulation.
      *
      * @param userId
-     * @param appId
+     * @param firstAppId
      */
-    private static void createFogDevices(int userId, String appId) {
+    private static void createFogDevicesForAll(int userId, String firstAppId, String secondAppId) {
         FogDevice cloud = createFogDevice("cloud", 44800, 40000, 100, 10000, 0, 0.01, 16 * 103, 16 * 83.25);
         cloud.setParentId(-1);
         fogDevices.add(cloud);
@@ -140,26 +156,62 @@ public class DCNSFog {
         proxy.setParentId(cloud.getId());
         proxy.setUplinkLatency(100); // latency of connection between proxy server and cloud is 100 ms
         fogDevices.add(proxy);
-        for (int i = 0; i < numOfAreas; i++) {
-            addArea(i + "", userId, appId, proxy.getId());
+        for (int i = 0; i < numOfCameraAreas; i++) {
+            FogDevice cameraArea = addCameraArea(i + "", userId, firstAppId, proxy.getId());
+            areaList.add(cameraArea);
+        }
+        for (int i = 0; i < numOfCureAreas; i++) {
+            FogDevice clientArea = addClientArea((numOfCameraAreas + i) + "", userId, secondAppId, proxy.getId());
+            areaList.add(clientArea);
         }
 
+        Map<String, List<FogDevice>> areaNeighborList = new HashMap<>();
+        for (int i = 0; i < areaList.size(); i++) {
+            String areaName = areaList.get(i).getName();
+            List<FogDevice> neighborList = new ArrayList<>();
+            List<Integer> neighborListId = new ArrayList<>();
+            if (i != 0 && i != areaList.size() - 1) {
+                neighborList.add(areaList.get(i + 1));
+                neighborList.add(areaList.get(i - 1));
+            } else if (i == 0) {
+                neighborList.add(areaList.get(i + 1));
+                neighborList.add(areaList.get(areaList.size() - 1));
+            } else if (i == areaList.size() - 1) {
+                neighborList.add(areaList.get(0));
+                neighborList.add(areaList.get(i - 1));
+            }
+            areaNeighborList.put(areaName, neighborList);
+
+            for (FogDevice neighbor : neighborList) {
+                neighborListId.add(neighbor.getId());
+            }
+            areaList.get(i).setNeighborIds(neighborListId);
+        }
+
+        for (int i = 0; i < areaList.size(); i++) {
+            areaNeighborLatency = new HashMap<>();
+            List<FogDevice> neighborList = areaNeighborList.get(areaList.get(i).getName());
+            for (int j = 0; j < neighborList.size(); j++) {
+                areaNeighborLatency.put(neighborList.get(j).getId(), 6.0);
+            }
+            areaList.get(i).setNeighborLatency(areaNeighborLatency);
+        }
     }
 
-    private static FogDevice addArea(String id, int userId, String appId, int parentId) {
+    private static FogDevice addCameraArea(String id, int userId, String appId, int parentId) {
         //邻居节点之间的传输带宽为5000
-        FogDevice router = createFogDevice("d-" + id, 14000, 4000, 10000, 10000, 5000, 1, 0.0, 107.339, 83.4333);
+        FogDevice router = createFogDevice("d-" + id, 14000, 4000, 10000, 10000,
+                5000, 1, 0.0, 107.339, 83.4333);
         fogDevices.add(router);
-        router.setUplinkLatency(2); // latency of connection between router and proxy server is 2 ms
-        for (int i = 0; i < numOfCamerasPerArea; i++) {
-            String mobileId = id + "-" + i;
-            FogDevice camera = addCamera(mobileId, userId, appId, router.getId()); // adding a smart camera to the physical topology. Smart cameras have been modeled as fog devices as well.
+        router.setUplinkLatency(10); // latency of connection between router and proxy server is 2 ms
+        for (int i = 0; i < numOfCamerasPerCameraArea; i++) {
+            String cameraId = id + "-" + i;
+            FogDevice camera = addCamera(cameraId, userId, appId, router.getId()); // adding a smart camera to the physical topology. Smart cameras have been modeled as fog devices as well.
             camera.setUplinkLatency(2); // latency of connection between camera and router is 2 ms
             fogDevices.add(camera);
             cameraList.add(camera);
         }
-        //TODO:创建一个FogDevice的Id到FogDevice的List的映射
-        //<fogDeviceId, List<neighborFogDevice>>
+        //TODO:创建一个FogDevice的Id到FogDevice的List的映射 <fogDeviceId, List<neighborFogDevice>>
         Map<String, List<FogDevice>> cameraNeighborList = new HashMap<>();
         for (int i = 0; i < cameraList.size(); i++) {
             String nodeName = cameraList.get(i).getName();
@@ -177,16 +229,18 @@ public class DCNSFog {
 
         //TODO: 创建邻居节点之间的延迟设置
         for (int i = 0; i < cameraList.size(); i++) {
-            neighborLatency = new HashMap<>();
+            cameraNeighborLatency = new HashMap<>();
             //利用当前节点名称寻找邻居节点列表，遍历邻居节点
             List<FogDevice> neighborList = cameraNeighborList.get(cameraList.get(i).getName());
             for (int j = 0; j < neighborList.size(); j++) {
-                double latency = Math.random() * 2 + 2.0;
+                double latency = Math.random() * 2;
                 BigDecimal b = new BigDecimal(latency);
-//                neighborLatency.put(j, b.setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
-                neighborLatency.put(neighborList.get(j).getId(), b.setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
+//                cameraNeighborLatency.put(j, b.setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
+//                cameraNeighborLatency.put(neighborList.get(j).getId(), b.setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
+                //暂且把边缘节点之间的延迟设置为固定值2.5
+                cameraNeighborLatency.put(neighborList.get(j).getId(), 1.5);
             }
-            cameraList.get(i).setNeighborLatency(neighborLatency);
+            cameraList.get(i).setNeighborLatency(cameraNeighborLatency);
         }
 
 //        for (String cameraId : cameraNeighborList.keySet()) {
@@ -196,12 +250,31 @@ public class DCNSFog {
 //                        + cameraNeighborList.get(cameraId).get(j).getNeighborLatency().get(j));
 //            }
 //        }
+        //同一个区域添加完成邻居节点的延迟之后需要进行列表的清空
+        cameraList.clear();
+        router.setParentId(parentId);
+        return router;
+    }
+
+    private static FogDevice addClientArea(String id, int userId, String appId, int parentId) {
+        FogDevice router = createFogDevice("d-" + id, 20000, 5000, 10000, 10000,
+                5000, 3, 0.0, 117.339, 93.4333);
+        fogDevices.add(router);
+        router.setUplinkLatency(10);
+        for (int i = 0; i < numOfClientsPerCureArea; i++) {
+            String clientId = id + "-" + i;
+            FogDevice client = addClient(clientId, userId, appId, router.getId());
+            client.setUplinkLatency(2);
+            fogDevices.add(client);
+        }
+
         router.setParentId(parentId);
         return router;
     }
 
     private static FogDevice addCamera(String id, int userId, String appId, int parentId) {
-        FogDevice camera = createFogDevice("m-" + id, 5000, 1000, 10000, 10000, 5000, 3, 0, 87.53, 82.44);
+        FogDevice camera = createFogDevice("m-" + id, 5000, 1000, 10000, 10000,
+                5000, 3, 0, 87.53, 82.44);
         camera.setParentId(parentId);
 //        Sensor sensor = new Sensor("s-" + id, "CAMERA", userId, appId, new NormalDistribution(5, 1)); // inter-transmission time of camera (sensor) follows a deterministic distribution
         Sensor sensor = new Sensor("s-" + id, "CAMERA", userId, appId, new DeterministicDistribution(5)); // inter-transmission time of camera (sensor) follows a deterministic distribution
@@ -213,6 +286,21 @@ public class DCNSFog {
         ptz.setGatewayDeviceId(camera.getId());
         ptz.setLatency(1.0);  // latency of connection between PTZ Control and the parent Smart Camera is 1 ms
         return camera;
+    }
+
+    private static FogDevice addClient(String id, int userId, String appId, int parentId) {
+        FogDevice client = createFogDevice("n-" + id, 10000, 2000, 10000, 10000,
+                3, 0, 98.56, 90.43);
+        client.setParentId(parentId);
+        Sensor sensor = new Sensor("b-" + id, "BG_VALUE", userId, appId, new DeterministicDistribution(10));
+        sensors.add(sensor);
+        Actuator ct = new Actuator("ct-" + id, userId, appId, "CLIENT_TERMINAL");
+        actuators.add(ct);
+        sensor.setGatewayDeviceId(client.getId());
+        sensor.setLatency(1.0);
+        ct.setGatewayDeviceId(client.getId());
+        ct.setLatency(1.0);
+        return client;
     }
 
     /**
@@ -336,56 +424,104 @@ public class DCNSFog {
      * @return
      */
     @SuppressWarnings({"serial"})
-    private static Application createApplication(String appId, int userId) {
+    private static Application createCameraApplication(String appId, int userId) {
 
-        Application application = Application.createApplication(appId, userId);
+        Application applicationCamera = Application.createApplication(appId, userId);
+
         /*
          * Adding modules (vertices) to the application model (directed graph)
          */
-        TupleScheduler ts1 = application.addAppModule("object_detector", 10);
-        TupleScheduler ts2 = application.addAppModule("motion_detector", 10);
-        TupleScheduler ts3 = application.addAppModule("object_tracker", 10);
-        TupleScheduler ts4 = application.addAppModule("user_interface", 10);
+        applicationCamera.addAppModule("object_detector", 10);
+        applicationCamera.addAppModule("motion_detector", 10);
+        applicationCamera.addAppModule("object_tracker", 10);
+        applicationCamera.addAppModule("user_interface", 10);
 
         /*
          * Connecting the application modules (vertices) in the application model (directed graph) with edges
          */
-        application.addAppEdge("CAMERA", "motion_detector", 1000,
+        applicationCamera.addAppEdge("CAMERA", "motion_detector", 1000,
                 20000, "CAMERA", Tuple.UP, AppEdge.SENSOR); // adding edge from CAMERA (sensor) to Motion Detector module carrying tuples of type CAMERA
-        application.addAppEdge("motion_detector", "object_detector", 2000,
+        applicationCamera.addAppEdge("motion_detector", "object_detector", 2000,
                 2000, "MOTION_VIDEO_STREAM", Tuple.UP, AppEdge.MODULE); // adding edge from Motion Detector to Object Detector module carrying tuples of type MOTION_VIDEO_STREAM
-        application.addAppEdge("object_detector", "user_interface", 500,
+        applicationCamera.addAppEdge("object_detector", "user_interface", 500,
                 2000, "DETECTED_OBJECT", Tuple.UP, AppEdge.MODULE); // adding edge from Object Detector to User Interface module carrying tuples of type DETECTED_OBJECT
-        application.addAppEdge("object_detector", "object_tracker", 1000,
+        applicationCamera.addAppEdge("object_detector", "object_tracker", 1000,
                 100, "OBJECT_LOCATION", Tuple.UP, AppEdge.MODULE); // adding edge from Object Detector to Object Tracker module carrying tuples of type OBJECT_LOCATION
-        application.addAppEdge("object_tracker", "PTZ_CONTROL", 100, 28, 100, "PTZ_PARAMS", Tuple.DOWN, AppEdge.ACTUATOR); // adding edge from Object Tracker to PTZ CONTROL (actuator) carrying tuples of type PTZ_PARAMS
+        applicationCamera.addAppEdge("object_tracker", "PTZ_CONTROL", 100,
+                28, 100, "PTZ_PARAMS", Tuple.DOWN, AppEdge.ACTUATOR); // adding edge from Object Tracker to PTZ CONTROL (actuator) carrying tuples of type PTZ_PARAMS
 
         /*
          * Defining the input-output relationships (represented by selectivity) of the application modules.
          */
-        application.addTupleMapping("motion_detector", "CAMERA", "MOTION_VIDEO_STREAM", new FractionalSelectivity(1.0)); // 1.0 tuples of type MOTION_VIDEO_STREAM are emitted by Motion Detector module per incoming tuple of type CAMERA
-        application.addTupleMapping("object_detector", "MOTION_VIDEO_STREAM", "OBJECT_LOCATION", new FractionalSelectivity(1.0)); // 1.0 tuples of type OBJECT_LOCATION are emitted by Object Detector module per incoming tuple of type MOTION_VIDEO_STREAM
-        application.addTupleMapping("object_detector", "MOTION_VIDEO_STREAM", "DETECTED_OBJECT", new FractionalSelectivity(0.05)); // 0.05 tuples of type MOTION_VIDEO_STREAM are emitted by Object Detector module per incoming tuple of type MOTION_VIDEO_STREAM
+        // 1.0 tuples of type MOTION_VIDEO_STREAM are emitted by Motion Detector module per incoming tuple of type CAMERA
+        applicationCamera.addTupleMapping("motion_detector", "CAMERA", "MOTION_VIDEO_STREAM", new FractionalSelectivity(1.0));
+        // 1.0 tuples of type OBJECT_LOCATION are emitted by Object Detector module per incoming tuple of type MOTION_VIDEO_STREAM
+        applicationCamera.addTupleMapping("object_detector", "MOTION_VIDEO_STREAM", "OBJECT_LOCATION", new FractionalSelectivity(1.0));
+        // 0.05 tuples of type MOTION_VIDEO_STREAM are emitted by Object Detector module per incoming tuple of type MOTION_VIDEO_STREAM
+        applicationCamera.addTupleMapping("object_detector", "MOTION_VIDEO_STREAM", "DETECTED_OBJECT", new FractionalSelectivity(0.05));
 
         /*
          * Defining application loops (maybe incomplete loops) to monitor the latency of.
          * Here, we add two loops for monitoring : Motion Detector -> Object Detector -> Object Tracker and Object Tracker -> PTZ Control
          */
-        final AppLoop loop1 = new AppLoop(new ArrayList<String>() {{
+        final AppLoop cameraLoop1 = new AppLoop(new ArrayList<String>() {{
             add("motion_detector");
             add("object_detector");
             add("object_tracker");
         }});
-        final AppLoop loop2 = new AppLoop(new ArrayList<String>() {{
+        final AppLoop cameraLoop2 = new AppLoop(new ArrayList<String>() {{
             add("object_tracker");
             add("PTZ_CONTROL");
         }});
-        List<AppLoop> loops = new ArrayList<AppLoop>() {{
-            add(loop1);
-            add(loop2);
+        List<AppLoop> cameraLoops = new ArrayList<AppLoop>() {{
+            add(cameraLoop1);
+            add(cameraLoop2);
         }};
 
-        application.setLoops(loops);
-        return application;
+        applicationCamera.setLoops(cameraLoops);
+        return applicationCamera;
+    }
+
+    @SuppressWarnings({"serial"})
+    private static Application createClientApplication(String appId, int userId) {
+        Application applicationClient = Application.createApplication(appId, userId);
+
+        applicationClient.addAppModule("patient_client", 10);
+        applicationClient.addAppModule("data_analysis", 10);
+        applicationClient.addAppModule("diagnostic_module", 10);
+
+        applicationClient.addAppEdge("BG_VALUE", "patient_client", 3000,
+                40000, "BG_VALUE", Tuple.UP, AppEdge.MODULE);
+        applicationClient.addAppEdge("patient_client", "data_analysis", 4000,
+                10000, "PATIENT_DATA", Tuple.UP, AppEdge.MODULE);
+        applicationClient.addAppEdge("data_analysis", "diagnostic_module", 1000,
+                5000, "SYMPTOMS_INFO", Tuple.UP, AppEdge.MODULE);
+        applicationClient.addAppEdge("diagnostic_module", "patient_client", 2000,
+                500, "DIAGNOSTIC_RESULT", Tuple.DOWN, AppEdge.MODULE);
+        applicationClient.addAppEdge("patient_client", "CLIENT_TERMINAL", 500,
+                100, 200, "VISUAL_RESULT", Tuple.DOWN, AppEdge.ACTUATOR);
+
+        applicationClient.addTupleMapping("patient_client", "BG_VALUE", "PATIENT_DATA", new FractionalSelectivity(1.0));
+        applicationClient.addTupleMapping("patient_client", "DIAGNOSTIC_RESULT", "VISUAL_RESULT", new FractionalSelectivity(0.5));
+        applicationClient.addTupleMapping("data_analysis", "PATIENT_DATA", "SYMPTOMS_INFO", new FractionalSelectivity(1.0));
+        applicationClient.addTupleMapping("diagnostic_module", "SYMPTOMS_INFO", "DIAGNOSTIC_RESULT", new FractionalSelectivity(1.0));
+
+        final AppLoop clientLoop1 = new AppLoop(new ArrayList<String>() {{
+            add("patient_client");
+            add("data_analysis");
+            add("diagnostic_module");
+            add("patient_client");
+        }});
+        final AppLoop clientLoop2 = new AppLoop(new ArrayList<String>() {{
+            add("patient_client");
+            add("CLIENT_TERMINAL");
+        }});
+        List<AppLoop> clientLoops = new ArrayList<AppLoop>() {{
+            add(clientLoop1);
+            add(clientLoop2);
+        }};
+
+        applicationClient.setLoops(clientLoops);
+        return applicationClient;
     }
 }

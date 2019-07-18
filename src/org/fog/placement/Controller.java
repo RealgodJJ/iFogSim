@@ -216,6 +216,7 @@ public class Controller extends SimEntity {
             ac.setApp(getApplications().get(ac.getAppId()));
         }
 
+        //注册在这次应用中执行器接收的数据流类型和对应的所有执行器编号形成的队列
         for (AppEdge edge : application.getEdges()) {
             if (edge.getEdgeType() == AppEdge.ACTUATOR) {
                 String moduleName = edge.getSource();

@@ -394,10 +394,10 @@ public class NetworkCloudletSpaceSharedScheduler extends CloudletScheduler {
 		return false;
 	}
 
-	@Override
-	public double cloudletRestart(int clId) {
-		return 0;
-	}
+//	@Override
+//	public double cloudletRestart(int clId) {
+//		return 0;
+//	}
 
 	/**
 	 * Processes a finished cloudlet.

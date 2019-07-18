@@ -93,6 +93,7 @@ public class Sensor extends SimEntity {
                 _edge = edge;
 //            i++;
         }
+//        System.out.println("===========" + tupleType + _edge.getTupleCpuLength());
         long cpuLength = (long) _edge.getTupleCpuLength();
         long nwLength = (long) _edge.getTupleNwLength();
 
@@ -107,6 +108,8 @@ public class Sensor extends SimEntity {
 
         int actualTupleId = updateTimings(getSensorName(), tuple.getDestModuleName());
         tuple.setActualTupleId(actualTupleId);
+        //TODO: 在此处添加一个起始发射任务tuple的起始边缘设备Id
+        tuple.setBeginDeviceId(getGatewayDeviceId());
 
         send(gatewayDeviceId, getLatency(), FogEvents.TUPLE_ARRIVAL, tuple);
     }
