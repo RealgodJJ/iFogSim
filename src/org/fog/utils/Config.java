@@ -4,7 +4,7 @@ public class Config {
 	//定量地设置一些参数
 	public static final double RESOURCE_MGMT_INTERVAL = 100;
 	//TODO：修改最大模拟时间（原来的最大运行时间为10000）
-	public static int MAX_SIMULATION_TIME = 1000;
+	public static int MAX_SIMULATION_TIME = 10000;
 	public static int RESOURCE_MANAGE_INTERVAL = 100;
 	public static String FOG_DEVICE_ARCH = "x86";
 	public static String FOG_DEVICE_OS = "Linux";

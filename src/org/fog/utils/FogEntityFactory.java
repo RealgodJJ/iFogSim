@@ -58,9 +58,9 @@ public class FogEntityFactory {
 
         FogDevice fogdevice = null;
         try {
-            fogdevice = new FogDevice(name, characteristics,
-                    new AppModuleAllocationPolicy(hostList), storageList, 10, uplinkBandwidth,
-                    downlinkBandwidth, latency, ratePerMips);
+//            fogdevice = new FogDevice(name, characteristics,
+//                    new AppModuleAllocationPolicy(hostList), storageList, 10, uplinkBandwidth,
+//                    downlinkBandwidth, latency, ratePerMips);
         } catch (Exception e) {
             e.printStackTrace();
         }

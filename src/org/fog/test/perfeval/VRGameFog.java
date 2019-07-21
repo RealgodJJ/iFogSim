@@ -223,7 +223,7 @@ public class VRGameFog {
             //TODO: 被迫添加
             fogdevice = new FogDevice(nodeName, characteristics,
                     new AppModuleAllocationPolicy(hostList), storageList, 10, upBw, downBw,
-                    0, ratePerMips);
+                    0, ratePerMips, level);
         } catch (Exception e) {
             e.printStackTrace();
         }

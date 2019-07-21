@@ -437,11 +437,11 @@ public class CloudletSchedulerTimeShared extends CloudletScheduler {
         }
 
         //TODO: 添加了等候队列中ResCloudet的状态获取
-        for (ResCloudlet rcl : getCloudletWaitingList()) {
-            if (rcl.getCloudletId() == cloudletId) {
-                return rcl.getCloudletStatus();
-            }
-        }
+//        for (ResCloudlet rcl : getCloudletWaitingList()) {
+//            if (rcl.getCloudletId() == cloudletId) {
+//                return rcl.getCloudletStatus();
+//            }
+//        }
         return -1;
     }
 

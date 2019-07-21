@@ -217,7 +217,9 @@ public class Application {
                         tuple.setAppId(inputTuple.getAppId());
                         tuple.setDestModuleName(edge.getDestination());
                         tuple.setSrcModuleName(edge.getSource());
+//                        System.out.println("Tuple before change: " + tuple.getSrcModuleName() + " " + tuple.getDestModuleName() + " " + tuple.getDirection());
                         tuple.setDirection(Tuple.ACTUATOR);
+//                        System.out.println("Tuple after change: " + tuple.getSrcModuleName() + " " + tuple.getDestModuleName() + " " + tuple.getDirection());
                         tuple.setTupleType(edge.getTupleType());
                         tuple.setSourceDeviceId(sourceDeviceId);
                         tuple.setSourceModuleId(sourceModuleId);
@@ -271,7 +273,9 @@ public class Application {
                 tuple.setAppId(getAppId());
                 tuple.setDestModuleName(edge.getDestination());
                 tuple.setSrcModuleName(edge.getSource());
+//                System.out.println("Tuple before change: " + tuple.getDirection());
                 tuple.setDirection(Tuple.ACTUATOR);
+//                System.out.println("Tuple after change: " + tuple.getDirection());
                 tuple.setTupleType(edge.getTupleType());
                 tuple.setSourceDeviceId(sourceDeviceId);
                 tuple.setActuatorId(actuatorId);

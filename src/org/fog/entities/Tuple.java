@@ -29,6 +29,8 @@ public class Tuple extends Cloudlet{
 	private boolean isToNeighbor;
 	private boolean isFromNeighbor;
 	private int beginDeviceId;
+	//TODO: 任务的容忍时间
+	private int tolerantTime;
 	/**
 	 * Map to keep track of which module instances has a tuple traversed.
 	 * 

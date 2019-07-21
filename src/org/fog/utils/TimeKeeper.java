@@ -104,8 +104,7 @@ public class TimeKeeper {
         return tupleTypeToAverageCpuTime;
     }
 
-    public void setTupleTypeToAverageCpuTime(
-            Map<String, Double> tupleTypeToAverageCpuTime) {
+    public void setTupleTypeToAverageCpuTime(Map<String, Double> tupleTypeToAverageCpuTime) {
         this.tupleTypeToAverageCpuTime = tupleTypeToAverageCpuTime;
     }
 

@@ -248,7 +248,7 @@ public class TwoApps {
         FogDevice fogdevice = null;
         try {
             fogdevice = new FogDevice(nodeName, characteristics,
-                    new AppModuleAllocationPolicy(hostList), storageList, 10, upBw, downBw, 0, ratePerMips);
+                    new AppModuleAllocationPolicy(hostList), storageList, 10, upBw, downBw, 0, ratePerMips, level);
         } catch (Exception e) {
             e.printStackTrace();
         }
