@@ -1,11 +1,10 @@
 package org.fog.scheduler;
 
 import org.cloudbus.cloudsim.CloudletSchedulerSpaceShared;
-//import org.cloudbus.cloudsim.CloudletSchedulerTimeShared;
 import org.cloudbus.cloudsim.CloudletSchedulerTimeShared;
 import org.cloudbus.cloudsim.ResCloudlet;
 
-public class TupleScheduler extends CloudletSchedulerTimeShared {
+public class TupleScheduler extends CloudletSchedulerSpaceShared {
 
     public TupleScheduler(double mips, int numberOfPes) {
         //super(mips, numberOfPes);
@@ -46,8 +45,8 @@ public class TupleScheduler extends CloudletSchedulerTimeShared {
     @Override
     public String toString() {
         StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append("waitingListNum: ").append(getWaitingListNum());
-        stringBuilder.append("ExecListNum: ").append(getExecListNum());
+//        stringBuilder.append("waitingListNum: ").append(getWaitingListNum());
+//        stringBuilder.append("ExecListNum: ").append(getExecListNum());
 
         return stringBuilder.toString();
     }

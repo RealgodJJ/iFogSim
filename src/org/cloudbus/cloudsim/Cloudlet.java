@@ -24,6 +24,8 @@ import org.cloudbus.cloudsim.core.CloudSim;
  * @since CloudSim Toolkit 1.0
  */
 public class Cloudlet {
+//    //TODO: 任务的容忍时间
+//    protected int tolerantTime;
 
     /**
      * TODO:The User or Broker（代理） ID. It is advisable that broker set this ID with its own ID, so that
@@ -1543,4 +1545,11 @@ public class Cloudlet {
         return getUtilizationModelBw().getUtilization(time);
     }
 
+//    public int getTolerantTime() {
+//        return tolerantTime;
+//    }
+//
+//    public void setTolerantTime(int tolerantTime) {
+//        this.tolerantTime = tolerantTime;
+//    }
 }

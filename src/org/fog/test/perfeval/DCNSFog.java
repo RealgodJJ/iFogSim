@@ -103,7 +103,11 @@ public class DCNSFog {
                     if (device.getName().startsWith("d-1") || device.getName().startsWith("d-3")) {
                         moduleMapping1.addModuleToDevice("data_analysis", device.getName());
                         moduleMapping1.addModuleToDevice("diagnostic_module", device.getName());
+                        moduleMapping1.addModuleToDevice("object_detector", device.getName());
+                        moduleMapping1.addModuleToDevice("object_tracker", device.getName());
                     } else if (device.getName().startsWith("d-0") || device.getName().startsWith("d-2")) {
+                        moduleMapping.addModuleToDevice("data_analysis", device.getName());
+                        moduleMapping.addModuleToDevice("diagnostic_module", device.getName());
                         moduleMapping.addModuleToDevice("object_detector", device.getName());
                         moduleMapping.addModuleToDevice("object_tracker", device.getName());
                     }
@@ -169,7 +173,8 @@ public class DCNSFog {
         proxy.setUplinkLatency(100); // latency of connection between proxy server and cloud is 100 ms
         fogDevices.add(proxy);
 
-        long[] mips = {4000, 8000, 6000, 12000};
+        long[] mips = {14000, 16000, 14000, 20000};
+//        long[] mips = {4000, 8000, 6000, 12000};
         for (int i = 0; i < numOfCameraAreas + numOfCureAreas; i++) {
             if (i % 2 == 0) {
                 FogDevice cameraArea = addCameraArea(i + "", userId, firstAppId, proxy.getId(), mips[i]);
@@ -299,7 +304,7 @@ public class DCNSFog {
     }
 
     private static FogDevice addCamera(String id, int userId, String appId, int parentId) {
-        FogDevice camera = createFogDevice("m-" + id, 500, 1000, 10000, 10000,
+        FogDevice camera = createFogDevice("m-" + id, 5000, 1000, 10000, 10000,
                 5000, 3, 0, 87.53, 82.44);
         camera.setParentId(parentId);
 //        Sensor sensor = new Sensor("s-" + id, "CAMERA", userId, appId, new NormalDistribution(5, 1)); // inter-transmission time of camera (sensor) follows a deterministic distribution
@@ -457,17 +462,21 @@ public class DCNSFog {
         /*
          * Adding modules (vertices) to the application model (directed graph)
          */
-        cameraApplication.addAppModule("object_detector", 10);
-        cameraApplication.addAppModule("motion_detector", 10);
-        cameraApplication.addAppModule("object_tracker", 10);
-        cameraApplication.addAppModule("user_interface", 10);
+        //TODO: 在这里面改addAppModule的另一种方法
+//        cameraApplication.addAppModule("motion_detector", 10);
+        cameraApplication.addAppModule("motion_detector", 10, 1000 * 2, 10000, 1000);
+//        cameraApplication.addAppModule("object_detector", 10);
+        cameraApplication.addAppModule("object_detector", 10, 2000 * 2, 10000, 1000);
+//        cameraApplication.addAppModule("object_tracker", 10);
+        cameraApplication.addAppModule("object_tracker", 10, 1000 * 2, 10000, 1000);
+        cameraApplication.addAppModule("user_interface", 10, 28 * 2, 10000, 1000);
 
         /*
          * Connecting the application modules (vertices) in the application model (directed graph) with edges
          */
-        cameraApplication.addAppEdge("CAMERA", "motion_detector", 000,
-                2000, "CAMERA", Tuple.UP, AppEdge.SENSOR); // adding edge from CAMERA (sensor) to Motion Detector module carrying tuples of type CAMERA
-        cameraApplication.addAppEdge("motion_detector", "object_detector", 24000,
+        cameraApplication.addAppEdge("CAMERA", "motion_detector", 1000,
+                20000, "CAMERA", Tuple.UP, AppEdge.SENSOR); // adding edge from CAMERA (sensor) to Motion Detector module carrying tuples of type CAMERA
+        cameraApplication.addAppEdge("motion_detector", "object_detector", 2000,
                 2000, "MOTION_VIDEO_STREAM", Tuple.UP, AppEdge.MODULE); // adding edge from Motion Detector to Object Detector module carrying tuples of type MOTION_VIDEO_STREAM
         cameraApplication.addAppEdge("object_detector", "user_interface", 500,
                 2000, "DETECTED_OBJECT", Tuple.UP, AppEdge.MODULE); // adding edge from Object Detector to User Interface module carrying tuples of type DETECTED_OBJECT
@@ -512,9 +521,12 @@ public class DCNSFog {
     private static Application createClientApplication(String appId, int userId) {
         Application clientApplication = Application.createApplication(appId, userId);
 
-        clientApplication.addAppModule("patient_client", 10);
-        clientApplication.addAppModule("data_analysis", 10);
-        clientApplication.addAppModule("diagnostic_module", 10);
+//        clientApplication.addAppModule("patient_client", 10);
+        clientApplication.addAppModule("patient_client", 10, 3000 * 2, 10000, 1000);
+//        clientApplication.addAppModule("data_analysis", 10);
+        clientApplication.addAppModule("data_analysis", 10, 4000 * 2, 10000, 1000);
+//        clientApplication.addAppModule("diagnostic_module", 10);
+        clientApplication.addAppModule("diagnostic_module", 10, 1000 * 2, 10000, 1000);
 
         clientApplication.addAppEdge("BG_VALUE", "patient_client", 3000,
                 40000, "BG_VALUE", Tuple.UP, AppEdge.MODULE);
@@ -524,7 +536,7 @@ public class DCNSFog {
                 5000, "SYMPTOMS_INFO", Tuple.UP, AppEdge.MODULE);
         clientApplication.addAppEdge("diagnostic_module", "patient_client", 2000,
                 500, "DIAGNOSTIC_RESULT", Tuple.DOWN, AppEdge.MODULE);
-        clientApplication.addAppEdge("patient_client", "CLIENT_TERMINAL", /*500,*/
+        clientApplication.addAppEdge("patient_client", "CLIENT_TERMINAL", 500,
                 100, 200, "VISUAL_RESULT", Tuple.DOWN, AppEdge.ACTUATOR);
 
         clientApplication.addTupleMapping("patient_client", "BG_VALUE", "PATIENT_DATA", new FractionalSelectivity(1.0));

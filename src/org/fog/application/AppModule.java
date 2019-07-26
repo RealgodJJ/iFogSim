@@ -24,10 +24,15 @@ public class AppModule extends PowerVm {
     //执行下一步任务流的路径
     private Map<Pair<String, String>, SelectivityModel> selectivityMap;
 
-    //专利：最大延迟容忍时间dtk
-    private double toleranceTime;
-    //专利：任务的计算量Wtk
-    private double calculateAmount;
+//    //专利：最大延迟容忍时间dtk
+//    private double tolerantTime;
+//    //专利：任务的计算量Wtk
+//    private double calculateAmount;
+
+    //TODO: 在该模块上执行的任务Tuple名称
+    private String tupleType;
+
+//    private TupleScheduler tupleScheduler;
 
     /**
      * A map from the AppModules sending tuples UP to this module to their instance IDs.
@@ -48,18 +53,8 @@ public class AppModule extends PowerVm {
      */
     private Map<String, List<Integer>> actuatorSubscriptions;
 
-    public AppModule(
-            int id,
-            String name,
-            String appId,
-            int userId,
-            double mips,
-            int ram,
-            long bw,
-            long size,
-            String vmm,
-            CloudletScheduler cloudletScheduler,
-            Map<Pair<String, String>, SelectivityModel> selectivityMap) {
+    public AppModule(int id, String name, String appId, int userId, double mips, int ram, long bw, long size, String vmm,
+                     CloudletScheduler cloudletScheduler, Map<Pair<String, String>, SelectivityModel> selectivityMap/*, int tolerantTime*/) {
 
         super(id, userId, mips, 2, ram, bw, size, 1, vmm, cloudletScheduler, 300);
         setName(name);
@@ -85,9 +80,12 @@ public class AppModule extends PowerVm {
         setNumInstances(0);
         setDownInstanceIdsMaps(new HashMap<String, List<Integer>>());
         setNeighborInstanceIdsMaps(new HashMap<String, List<Integer>>());
+//        setTolerantTime(tolerantTime);
     }
 
     public AppModule(AppModule operator) {
+        //TODO：将pe单元数量变为5（原为1）
+//        tupleScheduler = new TupleScheduler(operator.getMips(), 5);
         super(FogUtils.generateEntityId(), operator.getUserId(), operator.getMips(), 1, operator.getRam(),
                 operator.getBw(), operator.getSize(), 1, operator.getVmm(),
                 new TupleScheduler(operator.getMips(), 1), operator.getSchedulingInterval());
@@ -126,21 +124,21 @@ public class AppModule extends PowerVm {
         this.selectivityMap = selectivityMap;
     }
 
-    public double getToleranceTime() {
-        return toleranceTime;
-    }
-
-    public void setToleranceTime(double toleranceTime) {
-        this.toleranceTime = toleranceTime;
-    }
-
-    public double getCalculateAmount() {
-        return calculateAmount;
-    }
-
-    public void setCalculateAmount(double calculateAmount) {
-        this.calculateAmount = calculateAmount;
-    }
+//    public double getTolerantTime() {
+//        return tolerantTime;
+//    }
+//
+//    public void setTolerantTime(double tolerantTime) {
+//        this.tolerantTime = tolerantTime;
+//    }
+//
+//    public double getCalculateAmount() {
+//        return calculateAmount;
+//    }
+//
+//    public void setCalculateAmount(double calculateAmount) {
+//        this.calculateAmount = calculateAmount;
+//    }
 
     public String getAppId() {
         return appId;

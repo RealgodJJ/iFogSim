@@ -55,28 +55,28 @@ public class Controller extends SimEntity {
 
     //TODO: 设计传输连接延迟(上一级资源节点和下级资源节点之间||同级资源节点之间)
     private void connectWithLatencies() {
-        System.out.println("========= child latency ==========");
+//        System.out.println("========= child latency ==========");
         for (FogDevice fogDevice : getFogDevices()) {
             FogDevice parent = getFogDeviceById(fogDevice.getParentId());
             if (parent == null)
                 continue;
             double latency = fogDevice.getUplinkLatency();
             parent.getChildToLatencyMap().put(fogDevice.getId(), latency);
-            System.out.println(parent.getName() + "(" + fogDevice.getParentId() + ")----"
-                    + fogDevice.getName() + "(" + fogDevice.getId() + ")" + ": " + latency);
+//            System.out.println(parent.getName() + "(" + fogDevice.getParentId() + ")----"
+//                    + fogDevice.getName() + "(" + fogDevice.getId() + ")" + ": " + latency);
             parent.getChildrenIds().add(fogDevice.getId());
         }
 
         for (FogDevice fogDevice : getFogDevices()) {
             Map<Integer, Double> neighborLatency = fogDevice.getNeighborLatency();
             List<Integer> neighborIds = fogDevice.getNeighborIds();
-            System.out.println("=========" + fogDevice.getName() + "'s neighbor latency ==========");
+//            System.out.println("=========" + fogDevice.getName() + "'s neighbor latency ==========");
             for (Integer neighborId : neighborIds) {
                 FogDevice neighbor = getFogDeviceById(neighborId);
                 double latency = neighborLatency.get(neighborId);
                 fogDevice.getNeighborToLatencyMap().put(neighborId, latency);
-                System.out.println(fogDevice.getName() + "(" + fogDevice.getId() + ")----"
-                        + neighbor.getName() + "(" + neighborId + "): " + latency);
+//                System.out.println(fogDevice.getName() + "(" + fogDevice.getId() + ")----"
+//                        + neighbor.getName() + "(" + neighborId + "): " + latency);
             }
         }
     }

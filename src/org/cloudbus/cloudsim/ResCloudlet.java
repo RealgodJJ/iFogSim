@@ -544,7 +544,7 @@ public class ResCloudlet {
      * @pre $none
      * @post $result >= -1.0
      */
-    public double getClouddletFinishTime() {
+    public double getCloudletFinishTime() {
         return finishedTime;
     }
 

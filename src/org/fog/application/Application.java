@@ -63,19 +63,25 @@ public class Application {
         int mips = 1000;
         long size = 10000;
         long bw = 1000;
+        //TODO: 添加一个任务处理容忍时间
+        int tolerantTime = Integer.MAX_VALUE;
         String vmm = "Xen";
 
+        //TODO: 将pe单元的数量变为5(原数量为1)
         AppModule module = new AppModule(FogUtils.generateEntityId(), moduleName, appId, userId,
-                mips, ram, bw, size, vmm, new TupleScheduler(mips, 1), new HashMap<Pair<String, String>, SelectivityModel>());
+                mips, ram, bw, size, vmm, new TupleScheduler(mips, 1),
+                new HashMap<Pair<String, String>, SelectivityModel>()/*, tolerantTime*/);
 
         getModules().add(module);
 
     }
 
-    public void addAppModule(String moduleName, int ram, int mips, long size, long bw) {
+    public void addAppModule(String moduleName, int ram, int mips, long size, long bw/*, int tolerantTime*/) {
+        //TODO: 添加一个任务处理容忍时间
         String vmm = "Xen";
         AppModule module = new AppModule(FogUtils.generateEntityId(), moduleName, appId, userId, mips, ram, bw, size,
-                vmm, new TupleScheduler(mips, 1), new HashMap<Pair<String, String>, SelectivityModel>());
+                vmm, new TupleScheduler(mips, 1), new HashMap<Pair<String, String>, SelectivityModel>()/*,
+                tolerantTime*/);
         getModules().add(module);
     }
 
@@ -204,14 +210,10 @@ public class Application {
                     if (edge.getEdgeType() == AppEdge.ACTUATOR) {
                         //for(Integer actuatorId : module.getActuatorSubscriptions().get(edge.getTupleType())){
                         Tuple tuple = new Tuple(appId, FogUtils.generateTupleId(), edge.getDirection(),
-                                (long) (edge.getTupleCpuLength()),
-                                inputTuple.getNumberOfPes(),
-                                (long) (edge.getTupleNwLength()),
-                                inputTuple.getCloudletOutputSize(),
-                                inputTuple.getUtilizationModelCpu(),
-                                inputTuple.getUtilizationModelRam(),
-                                inputTuple.getUtilizationModelBw()
-                        );
+                                (long) (edge.getTupleCpuLength()), inputTuple.getNumberOfPes(), (long) (edge.getTupleNwLength()),
+                                inputTuple.getCloudletOutputSize(), inputTuple.getUtilizationModelCpu(),
+                                inputTuple.getUtilizationModelRam(), inputTuple.getUtilizationModelBw()/*,
+                                edge.getTupleCpuLength() / getModuleByName(edge.getDestination()).getMips() * 3*/);
                         tuple.setActualTupleId(inputTuple.getActualTupleId());
                         tuple.setUserId(inputTuple.getUserId());
                         tuple.setAppId(inputTuple.getAppId());
@@ -234,7 +236,8 @@ public class Application {
                         Tuple tuple = new Tuple(appId, FogUtils.generateTupleId(), edge.getDirection(),
                                 (long) (edge.getTupleCpuLength()), inputTuple.getNumberOfPes(), (long) (edge.getTupleNwLength()),
                                 inputTuple.getCloudletOutputSize(), inputTuple.getUtilizationModelCpu(),
-                                inputTuple.getUtilizationModelRam(), inputTuple.getUtilizationModelBw());
+                                inputTuple.getUtilizationModelRam(), inputTuple.getUtilizationModelBw(),
+                                edge.getTupleCpuLength() / getModuleByName(edge.getDestination()).getMips() * 3);
                         //此步骤实现的是actualTupleId在任务之间的传承
                         tuple.setActualTupleId(inputTuple.getActualTupleId());
                         tuple.setUserId(inputTuple.getUserId());
@@ -268,7 +271,8 @@ public class Application {
             for (Integer actuatorId : module.getActuatorSubscriptions().get(edge.getTupleType())) {
                 Tuple tuple = new Tuple(appId, FogUtils.generateTupleId(), edge.getDirection(),
                         (long) (edge.getTupleCpuLength()), 1, (long) (edge.getTupleNwLength()), 100,
-                        new UtilizationModelFull(), new UtilizationModelFull(), new UtilizationModelFull());
+                        new UtilizationModelFull(), new UtilizationModelFull(), new UtilizationModelFull()/*,
+                       edge.getTupleCpuLength() / getModuleByName(edge.getDestination()).getMips() * 3*/);
                 tuple.setUserId(getUserId());
                 tuple.setAppId(getAppId());
                 tuple.setDestModuleName(edge.getDestination());
@@ -286,7 +290,8 @@ public class Application {
         } else {
             Tuple tuple = new Tuple(appId, FogUtils.generateTupleId(), edge.getDirection(),
                     (long) (edge.getTupleCpuLength()), 1, (long) (edge.getTupleNwLength()), 100,
-                    new UtilizationModelFull(), new UtilizationModelFull(), new UtilizationModelFull());
+                    new UtilizationModelFull(), new UtilizationModelFull(), new UtilizationModelFull(),
+                    edge.getTupleCpuLength() / edge.getTupleCpuLength() * 3);
             //tuple.setActualTupleId(inputTuple.getActualTupleId());
             tuple.setUserId(getUserId());
             tuple.setAppId(getAppId());
