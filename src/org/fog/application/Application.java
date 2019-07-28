@@ -212,8 +212,8 @@ public class Application {
                         Tuple tuple = new Tuple(appId, FogUtils.generateTupleId(), edge.getDirection(),
                                 (long) (edge.getTupleCpuLength()), inputTuple.getNumberOfPes(), (long) (edge.getTupleNwLength()),
                                 inputTuple.getCloudletOutputSize(), inputTuple.getUtilizationModelCpu(),
-                                inputTuple.getUtilizationModelRam(), inputTuple.getUtilizationModelBw()/*,
-                                edge.getTupleCpuLength() / getModuleByName(edge.getDestination()).getMips() * 3*/);
+                                inputTuple.getUtilizationModelRam(), inputTuple.getUtilizationModelBw(),
+                                edge.getTupleCpuLength() / getModuleByName(moduleName).getMips() * 3);
                         tuple.setActualTupleId(inputTuple.getActualTupleId());
                         tuple.setUserId(inputTuple.getUserId());
                         tuple.setAppId(inputTuple.getAppId());
@@ -237,7 +237,7 @@ public class Application {
                                 (long) (edge.getTupleCpuLength()), inputTuple.getNumberOfPes(), (long) (edge.getTupleNwLength()),
                                 inputTuple.getCloudletOutputSize(), inputTuple.getUtilizationModelCpu(),
                                 inputTuple.getUtilizationModelRam(), inputTuple.getUtilizationModelBw(),
-                                edge.getTupleCpuLength() / getModuleByName(edge.getDestination()).getMips() * 3);
+                                edge.getTupleCpuLength() / getModuleByName(moduleName).getMips() * 3);
                         //此步骤实现的是actualTupleId在任务之间的传承
                         tuple.setActualTupleId(inputTuple.getActualTupleId());
                         tuple.setUserId(inputTuple.getUserId());
@@ -291,7 +291,7 @@ public class Application {
             Tuple tuple = new Tuple(appId, FogUtils.generateTupleId(), edge.getDirection(),
                     (long) (edge.getTupleCpuLength()), 1, (long) (edge.getTupleNwLength()), 100,
                     new UtilizationModelFull(), new UtilizationModelFull(), new UtilizationModelFull(),
-                    edge.getTupleCpuLength() / edge.getTupleCpuLength() * 3);
+                    edge.getTupleCpuLength() / module.getMips() * 3);
             //tuple.setActualTupleId(inputTuple.getActualTupleId());
             tuple.setUserId(getUserId());
             tuple.setAppId(getAppId());

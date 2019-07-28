@@ -32,8 +32,10 @@ public class Tuple extends Cloudlet {
     private int beginDeviceId;
     //TODO: 任务的容忍时间
     private double tolerantTime;
-    //TODO:
+    //TODO: 任务生成的时间
     private double produceTime;
+    //TODO: 任务剩余的时间
+    private double remainTime;
     /**
      * Map to keep track of which module instances has a tuple traversed.
      * <p>
@@ -206,5 +208,13 @@ public class Tuple extends Cloudlet {
 
     public void setProduceTime(double produceTime) {
         this.produceTime = produceTime;
+    }
+
+    public double getRemainTime() {
+        return remainTime;
+    }
+
+    public void setRemainTime(double remainTime) {
+        this.remainTime = remainTime;
     }
 }

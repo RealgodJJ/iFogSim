@@ -704,18 +704,18 @@ public class FogDevice extends PowerDataCenter {
         getHost().getVmScheduler().deallocatePesForAllVms();
         for (final Vm vm : getHost().getVmList()) {
             //TODO: 获取当前设备上
-            CloudletSchedulerSpaceShared cloudletScheduler = (CloudletSchedulerSpaceShared) vm.getCloudletScheduler();
-            List<ResCloudlet> cloudletWaitingList = cloudletScheduler.getCloudletWaitingList();
-            List<ResCloudlet> cloudletExecList = cloudletScheduler.getCloudletExecList();
+//            CloudletSchedulerSpaceShared cloudletScheduler = (CloudletSchedulerSpaceShared) vm.getCloudletScheduler();
+//            List<ResCloudlet> cloudletWaitingList = cloudletScheduler.getCloudletWaitingList();
+//            List<ResCloudlet> cloudletExecList = cloudletScheduler.getCloudletExecList();
 //            System.out.println(getName() + ": " + ((AppModule) vm).getName() + ": " + vm.getMips());
 
-            if (cloudletExecList.size() > 1) {
-                System.out.println("====ExecList====");
-                for (int i = 0; i < cloudletExecList.size(); i++) {
-                    ResCloudlet resCloudlet = cloudletExecList.get(i);
-                    System.err.println(resCloudlet.getCloudletId() + ": " + resCloudlet.getCloudletLength());
-                }
-            }
+//            if (cloudletExecList.size() > 1) {
+//                System.out.println("====ExecList====");
+//                for (int i = 0; i < cloudletExecList.size(); i++) {
+//                    ResCloudlet resCloudlet = cloudletExecList.get(i);
+//                    System.err.println(resCloudlet.getCloudletId() + ": " + resCloudlet.getCloudletLength());
+//                }
+//            }
 //
 //            if (cloudletWaitingList != null) {
 //                System.out.println("====WaitingList====");
