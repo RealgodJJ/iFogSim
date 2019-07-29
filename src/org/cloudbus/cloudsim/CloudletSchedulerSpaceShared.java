@@ -142,6 +142,22 @@ public class CloudletSchedulerSpaceShared extends CloudletScheduler {
 //                            + ((Tuple) cloudletWaitingList.get(j).getCloudlet()).getSourceDeviceId());
 //                }
             }
+
+            //TODO: 更新每个任务的预测完成时间（将第完成的任务时间剔除）
+            if (!getCloudletWaitingList().isEmpty()) {
+                double useToFinishTime = 0;
+                for (int j = 0; j < toRemove.size(); j++) {
+                    useToFinishTime += toRemove.get(j).getCloudletLength() / getCapacity(mipsShare) *
+                            getCloudletWaitingList().get(j).getNumberOfPes();
+                }
+
+                for (int j = 0; j < getCloudletWaitingList().size(); j++) {
+                    double estimatedFinishTime = getCloudletWaitingList().get(j).getCloudletLength()
+                            / (getCapacity(mipsShare) * getCloudletWaitingList().get(j).getNumberOfPes())
+                            - useToFinishTime;
+                    getCloudletWaitingList().get(j).setFinishTime(estimatedFinishTime);
+                }
+            }
         }
 
         // estimate finish time of cloudlets in the execution queue
@@ -431,39 +447,47 @@ public class CloudletSchedulerSpaceShared extends CloudletScheduler {
         } else {// no enough free PEs: go to the waiting queue
             ResCloudlet rcl = new ResCloudlet(cloudlet);
             rcl.setCloudletStatus(Cloudlet.QUEUED);
-//            getCloudletWaitingList().add(rcl);
+            getCloudletWaitingList().add(rcl);
 
             //TODO: 根据剩余时间大小将新任务插入到等待队列合适的位置上(按照剩余处理时间从小到大排序)
-            List<ResCloudlet> cloudletWaitingList = getCloudletWaitingList();
+//            List<ResCloudlet> cloudletWaitingList = getCloudletWaitingList();
             double remainTime = ((Tuple) rcl.getCloudlet()).getTolerantTime() -
                     (CloudSim.clock() - ((Tuple) rcl.getCloudlet()).getProduceTime());
             ((Tuple) rcl.getCloudlet()).setRemainTime(remainTime);
 
-            int position = -1;
-            if (cloudletWaitingList.size() == 0) {
-                cloudletWaitingList.add(rcl);
+            int position;
+            if (getCloudletWaitingList().size() == 0) {
+                getCloudletWaitingList().add(rcl);
                 position = 0;
             } else {
-                position = cloudletWaitingList.size() - 1;
-                for (int i = cloudletWaitingList.size() - 1; i >= 0; i--) {
+                position = getCloudletWaitingList().size() - 1;
+                for (int i = getCloudletWaitingList().size() - 1; i >= 0; i--) {
 //                    System.out.println("FUCK");
-                    if (((Tuple) cloudletWaitingList.get(i).getCloudlet()).getRemainTime()
+                    if (((Tuple) getCloudletWaitingList().get(i).getCloudlet()).getRemainTime()
                             < ((Tuple) rcl.getCloudlet()).getRemainTime()) {
-                        cloudletWaitingList.add(rcl);
+                        getCloudletWaitingList().add(i, rcl);
                         position = i;
+                        break;
                     }
                 }
             }
 
-            //TODO: 更新每个任务的预测完成时间
+            //更新新加入任务的预测完成时间
 //            System.out.println("The tuple add in waitingList: ");
             double estimatedFinishTime = CloudSim.clock();
             for (int i = 0; i <= position; i++) {
                 //任务完成的时间点（当前时间点 + 执行时间 + 队列中该任务之前的执行时间）
-                estimatedFinishTime += cloudletWaitingList.get(i).getCloudletLength()
-                        / (capacity * cloudletWaitingList.get(i).getNumberOfPes());
+                estimatedFinishTime += getCloudletWaitingList().get(i).getCloudletLength()
+                        / (capacity * getCloudletWaitingList().get(i).getNumberOfPes());
             }
-            cloudletWaitingList.get(position).setFinishTime(estimatedFinishTime);
+            getCloudletWaitingList().get(position).setFinishTime(estimatedFinishTime);
+
+            //更新加入任务的位置之后的任务预测完成时间
+            for (int i = position + 1; i < getCloudletWaitingList().size() - position; i++) {
+                estimatedFinishTime = getCloudletWaitingList().get(position).getCloudletFinishTime() +
+                        getCloudletWaitingList().get(i).getCloudletFinishTime();
+                getCloudletWaitingList().get(i).setFinishTime(estimatedFinishTime);
+            }
 
             //TODO: 重新排列等待队列中的任务（按照剩余处理时间从小到大排序）
 //            getCloudletWaitingList().sort((resCloudlet1, resCloudlet2) -> {
