@@ -36,6 +36,7 @@ public class Tuple extends Cloudlet {
     private double produceTime;
     //TODO: 任务剩余的时间
     private double remainTime;
+
     /**
      * Map to keep track of which module instances has a tuple traversed.
      * <p>
@@ -63,7 +64,8 @@ public class Tuple extends Cloudlet {
         //设置任务产生的时间
         setProduceTime(CloudSim.clock());
         //设置任务的容忍时间
-        setTolerantTime(tolerantTime);
+//        setTolerantTime(tolerantTime);
+        setTolerantTime(5000);
     }
 
     public Tuple(String appId, int cloudletId, int direction, long cloudletLength, int pesNumber,
@@ -87,6 +89,7 @@ public class Tuple extends Cloudlet {
         setProduceTime(CloudSim.clock());
         //设置任务的容忍时间
 //        setTolerantTime(tolerantTime);
+        setTolerantTime(5000);
     }
 
     public boolean isToNeighbor() {

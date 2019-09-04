@@ -7,11 +7,13 @@ import java.util.Map;
 
 import org.apache.commons.math3.util.Pair;
 import org.cloudbus.cloudsim.UtilizationModelFull;
+import org.cloudbus.cloudsim.core.CloudSim;
 import org.fog.application.selectivity.SelectivityModel;
 import org.fog.entities.Tuple;
 import org.fog.scheduler.TupleScheduler;
 import org.fog.utils.FogUtils;
 import org.fog.utils.GeoCoverage;
+import org.fog.utils.Logger;
 
 /**
  * Class represents an application in the Distributed Dataflow Model.
@@ -197,7 +199,8 @@ public class Application {
     public List<Tuple> getResultantTuples(String moduleName, Tuple inputTuple, int sourceDeviceId, int sourceModuleId, int beginDeviceId) {
         List<Tuple> tuples = new ArrayList<Tuple>();
         AppModule module = getModuleByName(moduleName);
-        for (AppEdge edge : getEdges()) {
+        List<AppEdge> edges = getEdges();
+        for (AppEdge edge : edges) {
             if (edge.getSource().equals(moduleName)) {
                 //创建一个任务变化对<上一个任务，下一个任务>
                 Pair<String, String> pair = new Pair<String, String>(inputTuple.getTupleType(), edge.getTupleType());
@@ -228,6 +231,10 @@ public class Application {
                         //tuple.setActuatorId(actuatorId);
                         //TODO: 添加一个源设备的id,以便于最终完成的tuple能够返回源设备
                         tuple.setBeginDeviceId(beginDeviceId);
+//                        FogDevice sourceDevice = (FogDevice) CloudSim.getEntity(sourceDeviceId);
+//                        if (tuple.getDestModuleName().equals("PTZ_CONTROL"))
+//                            if (!sourceDevice.getChildrenIds().contains(tuple.getBeginDeviceId()))
+//                                tuple.setFromNeighbor(true);
                         tuples.add(tuple);
 
                         //}
@@ -247,8 +254,18 @@ public class Application {
                         tuple.setDirection(edge.getDirection());
                         tuple.setTupleType(edge.getTupleType());
                         tuple.setSourceModuleId(sourceModuleId);
-                        //TODO: 添加一个源设备的id,以便于最终完成的tuple能够返回源设备
+                        //TODO: 添加一个源设备的id以及从邻居节点发送过来的标志位,以便于最终完成的tuple能够返回源设备
                         tuple.setBeginDeviceId(beginDeviceId);
+                        Logger.debug(CloudSim.getEntityName(sourceDeviceId), "Change tuple " +
+                                inputTuple.getCloudletId() + " to tuple " + tuple.getCloudletId() + " .");
+//                        System.out.println("Change tuple " +
+//                                inputTuple.getCloudletId() + " to tuple " + tuple.getCloudletId() + " .");
+
+//                        FogDevice sourceDevice = (FogDevice) CloudSim.getEntity(sourceDeviceId);
+//                        FogDevice beginDevice = (FogDevice) CloudSim.getEntity(tuple.getBeginDeviceId());
+//                        if (((FogDevice) CloudSim.getEntity(sourceDeviceId)).getChildrenIds().size() != 0
+//                                && !sourceDevice.getChildrenIds().contains(tuple.getBeginDeviceId()))
+//                            tuple.setFromNeighbor(true);
 
                         tuples.add(tuple);
                     }

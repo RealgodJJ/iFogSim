@@ -59,6 +59,7 @@ public class DCNSFog {
     public static void main(String[] args) {
 
         Log.printLine("Starting DCNS...");
+        Log.printLine("Starting CURES...");
 
         try {
             Log.disable();
@@ -99,18 +100,28 @@ public class DCNSFog {
                     if (device.getName().startsWith("n")) {
                         moduleMapping1.addModuleToDevice("patient_client", device.getName());
                     }
-
-                    if (device.getName().startsWith("d-1") || device.getName().startsWith("d-3")) {
+//                    if (device.getName().startsWith("d-1") || device.getName().startsWith("d-3")) {
+//                        moduleMapping1.addModuleToDevice("data_analysis", device.getName());
+//                        moduleMapping1.addModuleToDevice("diagnostic_module", device.getName());
+//                        moduleMapping1.addModuleToDevice("object_detector", device.getName());
+//                        moduleMapping1.addModuleToDevice("object_tracker", device.getName());
+//                    } else if (device.getName().startsWith("d-0") || device.getName().startsWith("d-2")) {
+//                        moduleMapping.addModuleToDevice("data_analysis", device.getName());
+//                        moduleMapping.addModuleToDevice("diagnostic_module", device.getName());
+//                        moduleMapping.addModuleToDevice("object_detector", device.getName());
+//                        moduleMapping.addModuleToDevice("object_tracker", device.getName());
+//                    }
+                    if (device.getName().startsWith("d")) {
                         moduleMapping1.addModuleToDevice("data_analysis", device.getName());
                         moduleMapping1.addModuleToDevice("diagnostic_module", device.getName());
-                        moduleMapping1.addModuleToDevice("object_detector", device.getName());
-                        moduleMapping1.addModuleToDevice("object_tracker", device.getName());
-                    } else if (device.getName().startsWith("d-0") || device.getName().startsWith("d-2")) {
-                        moduleMapping.addModuleToDevice("data_analysis", device.getName());
-                        moduleMapping.addModuleToDevice("diagnostic_module", device.getName());
                         moduleMapping.addModuleToDevice("object_detector", device.getName());
                         moduleMapping.addModuleToDevice("object_tracker", device.getName());
                     }
+
+//                    if (device.getName().startsWith("proxy")) {
+//                        moduleMapping1.addModuleToDevice("data_analysis", device.getName());
+//                        moduleMapping.addModuleToDevice("object_tracker", device.getName());
+//                    }
                 }
             }
             moduleMapping.addModuleToDevice("user_interface", "cloud"); // fixing instances of User Interface module in the Cloud
@@ -173,8 +184,8 @@ public class DCNSFog {
         proxy.setUplinkLatency(100); // latency of connection between proxy server and cloud is 100 ms
         fogDevices.add(proxy);
 
-        long[] mips = {14000, 16000, 14000, 20000};
-//        long[] mips = {4000, 8000, 6000, 12000};
+        long[] mips = {14000, 16000, 14000, 15000};
+//        long[] mips = {6000, 10000, 8000, 12000};
         for (int i = 0; i < numOfCameraAreas + numOfCureAreas; i++) {
             if (i % 2 == 0) {
                 FogDevice cameraArea = addCameraArea(i + "", userId, firstAppId, proxy.getId(), mips[i]);
@@ -200,16 +211,19 @@ public class DCNSFog {
             String areaName = areaList.get(i).getName();
             List<FogDevice> neighborList = new ArrayList<>();
             List<Integer> neighborListId = new ArrayList<>();
-            if (i != 0 && i != areaList.size() - 1) {
-                neighborList.add(areaList.get(i + 1));
-                neighborList.add(areaList.get(i - 1));
-            } else if (i == 0) {
-                neighborList.add(areaList.get(i + 1));
-                neighborList.add(areaList.get(areaList.size() - 1));
-            } else if (i == areaList.size() - 1) {
-                neighborList.add(areaList.get(0));
-                neighborList.add(areaList.get(i - 1));
-            }
+            neighborList.addAll(areaList);
+            neighborList.remove(i);
+//            if (i != 0 && i != areaList.size() - 1) {
+//                neighborList.add(areaList.get(i + 1));
+//                neighborList.add(areaList.get(i - 1));
+//            } else if (i == 0) {
+//                neighborList.add(areaList.get(i + 1));
+//                neighborList.add(areaList.get(areaList.size() - 1));
+//            } else if (i == areaList.size() - 1) {
+//                neighborList.add(areaList.get(0));
+//                neighborList.add(areaList.get(i - 1));
+//            }
+
             areaNeighborList.put(areaName, neighborList);
 
             for (FogDevice neighbor : neighborList) {
@@ -223,17 +237,19 @@ public class DCNSFog {
             List<FogDevice> neighborList = areaNeighborList.get(areaList.get(i).getName());
             for (int j = 0; j < neighborList.size(); j++) {
                 areaNeighborLatency.put(neighborList.get(j).getId(), 3.0);
+//                areaNeighborLatency.put(neighborList.get(j).getId(), 1.0);
             }
             areaList.get(i).setNeighborLatency(areaNeighborLatency);
         }
     }
 
     private static FogDevice addCameraArea(String id, int userId, String appId, int parentId, long mips) {
-        //邻居节点之间的传输带宽为5000
+        //邻居节点之间的传输带宽为8000
         FogDevice router = createFogDevice("d-" + id, mips, 4000, 10000, 10000,
                 5000, 1, 0.0, 107.339, 83.4333);
         fogDevices.add(router);
-        router.setUplinkLatency(10); // latency of connection between router and proxy server is 2 ms
+        router.setUplinkLatency(10.0); // latency of connection between router and proxy server is 2 ms
+//        router.setUplinkLatency(4.0); // latency of connection between router and proxy server is 2 ms
         for (int i = 0; i < numOfCamerasPerCameraArea; i++) {
             String cameraId = id + "-" + i;
             FogDevice camera = addCamera(cameraId, userId, appId, router.getId()); // adding a smart camera to the physical topology. Smart cameras have been modeled as fog devices as well.
@@ -268,8 +284,9 @@ public class DCNSFog {
                 BigDecimal b = new BigDecimal(latency);
 //                cameraNeighborLatency.put(j, b.setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
 //                cameraNeighborLatency.put(neighborList.get(j).getId(), b.setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
-                //暂且把边缘节点之间的延迟设置为固定值2.5
+                //暂且把边缘节点之间的延迟设置为固定值0.5
                 cameraNeighborLatency.put(neighborList.get(j).getId(), 1.5);
+//                cameraNeighborLatency.put(neighborList.get(j).getId(), 0.5);
             }
             cameraList.get(i).setNeighborLatency(cameraNeighborLatency);
         }
@@ -291,7 +308,7 @@ public class DCNSFog {
         FogDevice router = createFogDevice("d-" + id, mips, 5000, 10000, 10000,
                 5000, 3, 0.0, 117.339, 93.4333);
         fogDevices.add(router);
-        router.setUplinkLatency(10);
+        router.setUplinkLatency(4.0);
         for (int i = 0; i < numOfClientsPerCureArea; i++) {
             String clientId = id + "-" + i;
             FogDevice client = addClient(clientId, userId, appId, router.getId());
@@ -529,7 +546,7 @@ public class DCNSFog {
         clientApplication.addAppModule("diagnostic_module", 10, 1000 * 2, 10000, 1000);
 
         clientApplication.addAppEdge("BG_VALUE", "patient_client", 3000,
-                40000, "BG_VALUE", Tuple.UP, AppEdge.MODULE);
+                3000, "BG_VALUE", Tuple.UP, AppEdge.MODULE);
         clientApplication.addAppEdge("patient_client", "data_analysis", 4000,
                 10000, "PATIENT_DATA", Tuple.UP, AppEdge.MODULE);
         clientApplication.addAppEdge("data_analysis", "diagnostic_module", 1000,

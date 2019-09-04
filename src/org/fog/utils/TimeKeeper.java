@@ -49,6 +49,7 @@ public class TimeKeeper {
             double currentAverage = tupleTypeToAverageCpuTime.get(tuple.getTupleType());
             int currentCount = tupleTypeToExecutedTupleCount.get(tuple.getTupleType());
             tupleTypeToAverageCpuTime.put(tuple.getTupleType(), (currentAverage * currentCount + executionTime) / (currentCount + 1));
+            tupleTypeToExecutedTupleCount.put(tuple.getTupleType(), currentCount + 1);
         }
     }
 

@@ -24,9 +24,6 @@ import org.cloudbus.cloudsim.core.CloudSim;
  * @since CloudSim Toolkit 1.0
  */
 public class Cloudlet {
-//    //TODO: 任务的容忍时间
-//    protected int tolerantTime;
-
     /**
      * TODO:The User or Broker（代理） ID. It is advisable that broker set this ID with its own ID, so that
      * CloudResource returns to it after the execution.
@@ -214,6 +211,22 @@ public class Cloudlet {
      * The required files.
      */
     private List<String> requiredFiles = null;   // list of required filenames
+
+//    public boolean isToNeighbor() {
+//        return isToNeighbor;
+//    }
+//
+//    public void setToNeighbor(boolean toNeighbor) {
+//        isToNeighbor = toNeighbor;
+//    }
+//
+//    public boolean isFromNeighbor() {
+//        return isFromNeighbor;
+//    }
+//
+//    public void setFromNeighbor(boolean fromNeighbor) {
+//        isFromNeighbor = fromNeighbor;
+//    }
 
     /**
      * Allocates a new Cloudlet object. The Cloudlet length, input and output file sizes should be

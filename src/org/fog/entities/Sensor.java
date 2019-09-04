@@ -78,8 +78,8 @@ public class Sensor extends SimEntity {
         setUserId(userId);
 
         //TODO:打印传感器的相关信息
-        System.out.println("name: " + name + System.lineSeparator() + "tupleType: " + tupleType + System.lineSeparator()
-                + "userId: " + userId + System.lineSeparator() + "appId: " + appId + System.lineSeparator());
+//        System.out.println("name: " + name + System.lineSeparator() + "tupleType: " + tupleType + System.lineSeparator()
+//                + "userId: " + userId + System.lineSeparator() + "appId: " + appId + System.lineSeparator());
     }
 
     //边缘传感器检测节点发送信息到雾设备
@@ -109,7 +109,9 @@ public class Sensor extends SimEntity {
         int actualTupleId = updateTimings(getSensorName(), tuple.getDestModuleName());
         tuple.setActualTupleId(actualTupleId);
         //TODO: 在此处添加一个起始发射任务tuple的起始边缘设备Id
-        tuple.setBeginDeviceId(getGatewayDeviceId());
+        String name = CloudSim.getEntityName(((FogDevice) CloudSim.getEntity(getGatewayDeviceId())).getParentId());
+        tuple.setBeginDeviceId(((FogDevice) CloudSim.getEntity(getGatewayDeviceId())).getParentId());
+//        tuple.setBeginDeviceId(gatewayDeviceId);
 
         send(gatewayDeviceId, getLatency(), FogEvents.TUPLE_ARRIVAL, tuple);
     }
