@@ -59,7 +59,7 @@ public class DCNSFog {
     public static void main(String[] args) {
 
         Log.printLine("Starting DCNS...");
-        Log.printLine("Starting CURES...");
+        Log.printLine("Starting CURE...");
 
         try {
             Log.disable();
@@ -185,6 +185,7 @@ public class DCNSFog {
         fogDevices.add(proxy);
 
         long[] mips = {14000, 16000, 14000, 15000};
+//        long[] mips = {20000, 20000, 20000, 20000};
 //        long[] mips = {6000, 10000, 8000, 12000};
         for (int i = 0; i < numOfCameraAreas + numOfCureAreas; i++) {
             if (i % 2 == 0) {
@@ -486,6 +487,7 @@ public class DCNSFog {
         cameraApplication.addAppModule("object_detector", 10, 2000 * 2, 10000, 1000);
 //        cameraApplication.addAppModule("object_tracker", 10);
         cameraApplication.addAppModule("object_tracker", 10, 1000 * 2, 10000, 1000);
+//        cameraApplication.addAppModule("user_interface", 10);
         cameraApplication.addAppModule("user_interface", 10, 28 * 2, 10000, 1000);
 
         /*
@@ -499,8 +501,8 @@ public class DCNSFog {
                 2000, "DETECTED_OBJECT", Tuple.UP, AppEdge.MODULE); // adding edge from Object Detector to User Interface module carrying tuples of type DETECTED_OBJECT
         cameraApplication.addAppEdge("object_detector", "object_tracker", 1000,
                 100, "OBJECT_LOCATION", Tuple.UP, AppEdge.MODULE); // adding edge from Object Detector to Object Tracker module carrying tuples of type OBJECT_LOCATION
-        cameraApplication.addAppEdge("object_tracker", "PTZ_CONTROL", 100,
-                28, 100, "PTZ_PARAMS", Tuple.DOWN, AppEdge.ACTUATOR); // adding edge from Object Tracker to PTZ CONTROL (actuator) carrying tuples of type PTZ_PARAMS
+        cameraApplication.addAppEdge("object_tracker", "PTZ_CONTROL", 100, 28,
+                100, "PTZ_PARAMS", Tuple.DOWN, AppEdge.ACTUATOR); // adding edge from Object Tracker to PTZ CONTROL (actuator) carrying tuples of type PTZ_PARAMS
 
         /*
          * Defining the input-output relationships (represented by selectivity) of the application modules.
@@ -539,14 +541,14 @@ public class DCNSFog {
         Application clientApplication = Application.createApplication(appId, userId);
 
 //        clientApplication.addAppModule("patient_client", 10);
-        clientApplication.addAppModule("patient_client", 10, 3000 * 2, 10000, 1000);
+        clientApplication.addAppModule("patient_client", 10, 5000 * 2, 10000, 1000);
 //        clientApplication.addAppModule("data_analysis", 10);
         clientApplication.addAppModule("data_analysis", 10, 4000 * 2, 10000, 1000);
 //        clientApplication.addAppModule("diagnostic_module", 10);
         clientApplication.addAppModule("diagnostic_module", 10, 1000 * 2, 10000, 1000);
 
         clientApplication.addAppEdge("BG_VALUE", "patient_client", 3000,
-                3000, "BG_VALUE", Tuple.UP, AppEdge.MODULE);
+                3000, "BG_VALUE", Tuple.UP, AppEdge.SENSOR);
         clientApplication.addAppEdge("patient_client", "data_analysis", 4000,
                 10000, "PATIENT_DATA", Tuple.UP, AppEdge.MODULE);
         clientApplication.addAppEdge("data_analysis", "diagnostic_module", 1000,
@@ -557,9 +559,9 @@ public class DCNSFog {
                 100, 200, "VISUAL_RESULT", Tuple.DOWN, AppEdge.ACTUATOR);
 
         clientApplication.addTupleMapping("patient_client", "BG_VALUE", "PATIENT_DATA", new FractionalSelectivity(1.0));
-        clientApplication.addTupleMapping("patient_client", "DIAGNOSTIC_RESULT", "VISUAL_RESULT", new FractionalSelectivity(0.5));
         clientApplication.addTupleMapping("data_analysis", "PATIENT_DATA", "SYMPTOMS_INFO", new FractionalSelectivity(1.0));
         clientApplication.addTupleMapping("diagnostic_module", "SYMPTOMS_INFO", "DIAGNOSTIC_RESULT", new FractionalSelectivity(1.0));
+        clientApplication.addTupleMapping("patient_client", "DIAGNOSTIC_RESULT", "VISUAL_RESULT", new FractionalSelectivity(0.5));
 
         final AppLoop clientLoop1 = new AppLoop(new ArrayList<String>() {{
             add("patient_client");

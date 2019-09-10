@@ -189,8 +189,20 @@ public class Controller extends SimEntity {
         }
 
         System.out.println("=========================================");
-        System.out.println("Send to neighbor: " + Config.SEND_NEIGHBOR);
+//        System.out.println("Send to neighbor: " + Config.SEND_NEIGHBOR);
+        System.out.println("Send to neighbor successful: " + Config.SEND_NEIGHBOR_SUCCESS);
+        System.out.println("Send to neighbor successful(APP1): " + Config.SEND_NEIGHBOR_SUCCESS_APP1);
+        System.out.println("Send to neighbor successful(APP2): " + Config.SEND_NEIGHBOR_SUCCESS_APP2);
         System.out.println("Send back: " + Config.SEND_BACK);
+        System.out.println("Send back app1: " + Config.SEND_BACK_APP1);
+        System.out.println("Send back app2: " + Config.SEND_BACK_APP2);
+        System.out.println("WAITINGLIST: " + Config.WAITINGLIST_SIZE);
+        System.out.println("WAITINGLIST_APP1: " + Config.WAITINGLIST_SIZE_APP1);
+        System.out.println("WAITINGLIST_APP2: " + Config.WAITINGLIST_SIZE_APP2);
+
+        System.out.println("EXECLIST FROM WAITINGLIST: " + Config.EXECLIST_SIZE_IN_WAITINGLIST);
+//        System.out.println("EXECLIST FROM WAITINGLIST APP1: " + Config.EXECLIST_SIZE_IN_WAITINGLIST_APP1);
+//        System.out.println("EXECLIST FROM WAITINGLIST APP2: " + Config.EXECLIST_SIZE_IN_WAITINGLIST_APP2);
     }
 
     protected void manageResources() {

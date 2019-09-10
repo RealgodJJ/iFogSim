@@ -6,6 +6,7 @@ import org.apache.commons.math3.util.Pair;
 import org.cloudbus.cloudsim.*;
 import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.core.CloudSimTags;
+import org.cloudbus.cloudsim.core.SimEntity;
 import org.cloudbus.cloudsim.core.SimEvent;
 import org.cloudbus.cloudsim.power.PowerDataCenter;
 import org.cloudbus.cloudsim.power.PowerHost;
@@ -37,8 +38,8 @@ public class FogDevice extends PowerDataCenter {
     protected Map<String, Application> applicationMap;
     protected Map<String, List<String>> appToModulesMap;
     protected Map<Integer, Double> childToLatencyMap;
+
     //TODO: 获取设备与邻近节点之间的延迟（<fogDeviceId, <neighborId, latency>>）
-//    protected Map<Integer, Map<Integer, Double>> neighborToLatencyMap;
     protected Map<Integer, Double> neighborToLatencyMap;
 
     protected Map<Integer, Integer> cloudTrafficMap;
@@ -49,9 +50,6 @@ public class FogDevice extends PowerDataCenter {
      * ID of the parent Fog Device
      */
     protected int parentId;
-
-    //TODO: 发送节点的编号
-    protected int targetId;
 
     /**
      * ID of the Controller
@@ -97,10 +95,9 @@ public class FogDevice extends PowerDataCenter {
     protected double ratePerMips;
     protected double totalCost;
     protected Map<String, Map<String, Integer>> moduleInstanceCount;
+    //TODO: <tupleId, sourceFogDeviceId>
+//    protected List<Pair<Integer, Integer>> tupleFromNeighbor = new ArrayList<Pair<Integer, Integer>>();
 
-    protected int tupleQuanityFromChildren = 0;
-    protected int tupleQuanityFromParent = 0;
-    protected Queue<Pair<Integer, Integer>> tupleQuantityOfNeighbors;
     private int level;
 
     //DCNSFog的第一种调用
@@ -157,7 +154,7 @@ public class FogDevice extends PowerDataCenter {
         setModuleInstanceCount(new HashMap<String, Map<String, Integer>>());
         setChildToLatencyMap(new HashMap<Integer, Double>());
         setNeighborToLatencyMap(new HashMap<Integer, Double>());
-        targetId = getId();
+
 
         //TODO:添加FogDevice信息的打印
 //        System.out.println("name:" + name + System.lineSeparator() +
@@ -227,7 +224,6 @@ public class FogDevice extends PowerDataCenter {
         setModuleInstanceCount(new HashMap<String, Map<String, Integer>>());
         setChildToLatencyMap(new HashMap<Integer, Double>());
         setNeighborToLatencyMap(new HashMap<Integer, Double>());
-        targetId = getId();
 
         //TODO:添加FogDevice信息的打印
 //        System.out.println("name:" + name + System.lineSeparator() +
@@ -649,11 +645,35 @@ public class FogDevice extends PowerDataCenter {
                         Application application = getApplicationMap().get(tuple.getAppId());
                         Logger.debug(getName(), "Completed execution of tuple " + tuple.getCloudletId() + " on " + tuple.getDestModuleName());
 
+                        if (tuple.getDestModuleName().equals("object_tracker") && tuple.getBeginDeviceId() != getId())
+                            sendBackToOriginal(tuple, tuple.getBeginDeviceId());
+
                         //实现tuple之间的交接
                         List<Tuple> resultantTuples = application.getResultantTuples(tuple.getDestModuleName(), tuple, getId(), vm.getId(), tuple.getBeginDeviceId());
                         for (Tuple resTuple : resultantTuples) {
                             resTuple.setModuleCopyMap(new HashMap<String, Integer>(tuple.getModuleCopyMap()));
                             resTuple.getModuleCopyMap().put(((AppModule) vm).getName(), vm.getId());
+//                            if (resTuple.getDirection() == Tuple.DOWN) {
+
+//                                System.out.println("It's down");
+//                            }
+
+                            String beginDeviceName = CloudSim.getEntityName(resTuple.getBeginDeviceId());
+                            String targetFogDeviceName = CloudSim.getEntityName(resTuple.getTargetId());
+
+//                            if (resTuple.getAppId().equals("dcns")) {
+//                                System.out.println(resTuple.getTupleType());
+//                            }
+                            if (resTuple.getDirection() == Tuple.DOWN && resTuple.getBeginDeviceId() != getId()) {
+//                                if (resTuple.getDestModuleName().equals("patient_client")) {
+//                                    System.out.println("APP2 will be sent back!");
+//                                }
+//                                if (resTuple.getDestModuleName().equals("PTZ_CONTROL")) {
+//                                    System.out.println("APP1 will be sent back!");
+//                                }
+                                sendBackToOriginal(resTuple, resTuple.getBeginDeviceId());
+                            }
+
                             updateTimingsOnSending(resTuple);   //在以前收到的tuple生成一个Tuple时更新时间
                             sendToSelf(resTuple);
                         }
@@ -686,15 +706,15 @@ public class FogDevice extends PowerDataCenter {
         }
     }
 
-//    protected int getFriendIdWithRouteTo(int targetDeviceId) {
-//        for (Integer friendId : getNeighborIds()) {
-//            if (targetDeviceId == friendId)
-//                return friendId;
-//            if (((FogDevice)CloudSim.getEntity(friendId)).getFriendIdWithRouteTo(targetDeviceId) != -1)
-//                return friendId;
-//        }
-//        return -1;
-//    }
+    protected int getFriendIdWithRouteTo(int targetDeviceId) {
+        for (Integer friendId : getNeighborIds()) {
+            if (targetDeviceId == friendId)
+                return friendId;
+            if (((FogDevice) CloudSim.getEntity(friendId)).getFriendIdWithRouteTo(targetDeviceId) != -1)
+                return friendId;
+        }
+        return -1;
+    }
 
     protected int getChildIdWithRouteTo(int targetDeviceId) {
         for (Integer childId : getChildrenIds()) {
@@ -813,12 +833,21 @@ public class FogDevice extends PowerDataCenter {
 		if(childId != -1)
 			sendDown(tuple, childId);*/
 
+        //将任务发送回原来actuator上层的边缘节点
+//        if (getName().startsWith("d")) {
+//            Actuator actuator = ((Actuator) CloudSim.getEntity(tuple.getActuatorId()));
+//            int beginDeviceId = ((FogDevice) CloudSim.getEntity(actuator.getGatewayDeviceId())).getParentId();
+//            tuple.setBeginDeviceId(beginDeviceId);
+//            if (beginDeviceId != getId()) {
+//                sendBackToOriginal(tuple, tuple.getBeginDeviceId());
+//                return;
+//            }
+//        }
+
         for (Pair<Integer, Double> actuatorAssociation : getAssociatedActuatorIds()) {
             int actuatorId = actuatorAssociation.getFirst();
             double delay = actuatorAssociation.getSecond();
             String actuatorType = ((Actuator) CloudSim.getEntity(actuatorId)).getActuatorType();
-//            if (tuple.getDestModuleName().equals("PTZ_CONTROL"))
-//                System.out.println(actuatorType + "    " + this.getName() + "         " + CloudSim.getEntityName(getParentId()));
 
             if (tuple.getDestModuleName().equals(actuatorType)) {
                 send(actuatorId, delay, FogEvents.TUPLE_ARRIVAL, tuple);
@@ -901,7 +930,12 @@ public class FogDevice extends PowerDataCenter {
                     + getNeighborLatency().get(neighborId) + tuple.getCloudletFileSize() / getNeighborBandwidth();
             if (minEstimateTime > estimatedHandlerTime) {
                 minEstimateTime = estimatedHandlerTime;
-                targetId = neighborId;
+                tuple.setTargetId(neighborId);
+            }
+
+            //如果目标节点不是本地节点，将该任务加入到pair中
+            if (tuple.getTargetId() != getId()) {
+//                tupleFromNeighbor.add(new Pair<>(tuple.getCloudletId(), getId()));
             }
         }
     }
@@ -909,7 +943,7 @@ public class FogDevice extends PowerDataCenter {
     protected void sendToNeighborFogDevice(SimEvent ev) {
         Tuple tuple = (Tuple) ev.getData();
         for (int neighborId : getNeighborIds()) {
-            if (targetId == neighborId) {
+            if (tuple.getTargetId() == neighborId) {
                 //设置该任务已经是转发过的任务，不可再进行二次转发
                 tuple.setToNeighbor(true);
                 sendNeighbor(tuple, neighborId);
@@ -918,10 +952,10 @@ public class FogDevice extends PowerDataCenter {
         }
     }
 
-
     // 接收传来的元组
     protected void processTupleArrival(SimEvent ev) {
         Tuple tuple = (Tuple) ev.getData();
+        tuple.setTargetId(getId());
 
         if (getName().equals("cloud")) {
             updateCloudTraffic();
@@ -937,9 +971,10 @@ public class FogDevice extends PowerDataCenter {
         }
 
         //（1）判断该任务是否发送到邻居节点
-        if (!tuple.isToNeighbor()) {    //判断是否已经进行过一次转发,如果转发过，直接跳过此步骤
-//            processByTargetFogDevice(tuple);
-            if (!Objects.equals(CloudSim.getEntityName(targetId), getName())) {
+        if (!tuple.isToNeighbor()) {    //判断是否已经进行过一次转发，如果转发过，直接跳过此步骤
+            processByTargetFogDevice(tuple);
+            Application app = getApplicationMap().get(tuple.getAppId());
+            if (tuple.getTargetId() != getId()) {
                 //发送转发任务机制的消息
                 sendForRepost(tuple);
                 return;
@@ -949,22 +984,16 @@ public class FogDevice extends PowerDataCenter {
         //（2）判断是否将任务传递给执行器（也就是任务是否结束）
         if (tuple.getDirection() == Tuple.ACTUATOR) {
             //TODO: 在任务tuple发送给Actuator之前先发送回对应的上层边缘节点
-//            if (tuple.getSrcModuleName().equals("object_tracker") &&
-//                    !((FogDevice) CloudSim.getEntity(getId())).getChildrenIds().contains(tuple.getBeginDeviceId())
-//                /*&& tuple.isFromNeighbor()*/) {
-////                sendBackToOriginal(tuple, ((FogDevice) CloudSim.getEntity(tuple.getBeginDeviceId())).getParentId());
-//            }
             sendTupleToActuator(tuple);
             return;
         }
 
         //（3）判断是否将任务传递给源节点
         //TODO: 将任务发送回源节点
-        if (tuple.getSrcModuleName().equals("diagnostic_module") && getName().startsWith("d") &&
-                getId() != tuple.getBeginDeviceId()) {
+//        if (tuple.getDestModuleName().equals("patient_client") && getName().startsWith("d") &&
+//                getId() != tuple.getBeginDeviceId()) {
 //            sendBackToOriginal(tuple, tuple.getBeginDeviceId());
-//            System.out.println(tuple.getDestModuleName() + " finish one back! (" + tuple.getBeginDeviceId() + ")");
-        }
+//        }
 
         if (getHost().getVmList().size() > 0) {
             final AppModule operator = (AppModule) getHost().getVmList().get(0);
@@ -1203,7 +1232,11 @@ public class FogDevice extends PowerDataCenter {
         double networkDelay = tuple.getCloudletFileSize() / getNeighborBandwidth();
         Logger.debug(getName(), "Sending(Neighbor) tuple " + tuple.getCloudletId() + " with tupleType = " + tuple.getTupleType() + "\t| Source : " +
                 CloudSim.getEntityName(this.getId()) + "|Dest : " + CloudSim.getEntityName(neighborId));
-        Config.SEND_NEIGHBOR++;
+        if (tuple.getDestModuleName().equals("object_detector") || tuple.getDestModuleName().equals("object_tracker"))
+            Config.SEND_NEIGHBOR_SUCCESS_APP1++;
+        if (tuple.getDestModuleName().equals("data_analysis") || tuple.getDestModuleName().equals("diagnostic_module"))
+            Config.SEND_NEIGHBOR_SUCCESS_APP2++;
+        Config.SEND_NEIGHBOR_SUCCESS++;
         setNeighborLinkBusy(true);
         double latency = getNeighborToLatencyMap().get(neighborId);
         send(getId(), networkDelay, FogEvents.UPDATE_NEIGHBOR_TUPLE_QUEUE);
@@ -1238,13 +1271,19 @@ public class FogDevice extends PowerDataCenter {
         double networkDelay = tuple.getCloudletFileSize() / getNeighborBandwidth();
         Logger.debug(getName(), "Sending back tuple " + tuple.getCloudletId() + " with tupleType = " + tuple.getTupleType() + "\t| Source : " +
                 CloudSim.getEntityName(this.getId()) + "|Dest : " + CloudSim.getEntityName(originalId));
-        Config.SEND_BACK++;
         setBackLinkBusy(true);
         double latency = getNeighborToLatencyMap().get(originalId);
         send(getId(), networkDelay, FogEvents.UPDATE_BACK_TUPLE_QUEUE);
         send(originalId, networkDelay + latency, FogEvents.TUPLE_ARRIVAL, tuple);
 //        tuple.setFromNeighbor(true);
         NetworkUsageMonitor.sendingTuple(latency, tuple.getCloudletFileSize());
+
+        Config.SEND_BACK++;
+        if (tuple.getDestModuleName().equals("patient_client"))
+            Config.SEND_BACK_APP2++;
+
+        if (tuple.getDestModuleName().equals("object_tracker"))
+            Config.SEND_BACK_APP1++;
     }
 
     //TODO: 完成任务后发送回初始节点
@@ -1501,29 +1540,5 @@ public class FogDevice extends PowerDataCenter {
     public void setModuleInstanceCount(
             Map<String, Map<String, Integer>> moduleInstanceCount) {
         this.moduleInstanceCount = moduleInstanceCount;
-    }
-
-    public int getTupleQuanityFromChildren() {
-        return tupleQuanityFromChildren;
-    }
-
-    public void setTupleQuanityFromChildren(int tupleQuanityFromChildren) {
-        this.tupleQuanityFromChildren = tupleQuanityFromChildren;
-    }
-
-    public int getTupleQuanityFromParent() {
-        return tupleQuanityFromParent;
-    }
-
-    public void setTupleQuanityFromParent(int tupleQuanityFromParent) {
-        this.tupleQuanityFromParent = tupleQuanityFromParent;
-    }
-
-    public Queue<Pair<Integer, Integer>> getTupleQuantityOfNeighbors() {
-        return tupleQuantityOfNeighbors;
-    }
-
-    public void setTupleQuantityOfNeighbors(Queue<Pair<Integer, Integer>> tupleQuantityOfNeighbors) {
-        this.tupleQuantityOfNeighbors = tupleQuantityOfNeighbors;
     }
 }

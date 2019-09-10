@@ -10,8 +10,10 @@ package org.cloudbus.cloudsim;
 
 import java.util.*;
 
+import com.sun.org.apache.bcel.internal.generic.IF_ACMPEQ;
 import org.cloudbus.cloudsim.core.CloudSim;
 import org.fog.entities.Tuple;
+import org.fog.utils.Config;
 
 /**
  * CloudletSchedulerSpaceShared implements a policy of scheduling performed by a virtual machine. It
@@ -122,13 +124,15 @@ public class CloudletSchedulerSpaceShared extends CloudletScheduler {
                         //将等待队列中的rcl任务设置为执行状态
                         rcl.setCloudletStatus(Cloudlet.INEXEC);
                         for (int k = 0; k < rcl.getNumberOfPes(); k++) {
-                            rcl.setMachineAndPeId(0, i);
+                            rcl.setMachineAndPeId(0, k);
+//                            rcl.setMachineAndPeId(0, i);
                         }
                         //向执行队列中添加rcl任务
                         getCloudletExecList().add(rcl);
                         //设置使用的pe数量
                         usedPes += rcl.getNumberOfPes();
                         toRemove.add(rcl);
+                        Config.EXECLIST_SIZE_IN_WAITINGLIST++;
                         break;
                     }
                 }
@@ -149,7 +153,9 @@ public class CloudletSchedulerSpaceShared extends CloudletScheduler {
                     double remainTime = ((Tuple) getCloudletWaitingList().get(j).getCloudlet()).getTolerantTime() -
                             (CloudSim.clock() - ((Tuple) getCloudletWaitingList().get(j).getCloudlet()).getProduceTime());
                     ((Tuple) getCloudletWaitingList().get(j).getCloudlet()).setRemainTime(remainTime);
+//                    System.out.println(((Tuple)getCloudletWaitingList().get(j).getCloudlet()).getTupleType());
                 }
+//                System.out.println("==============================");
             }
         }
 
@@ -378,6 +384,9 @@ public class CloudletSchedulerSpaceShared extends CloudletScheduler {
                 }
                 currentCpus = cpus;
                 capacity /= cpus;
+                if (currentCpus != 1) {
+                    System.out.println("currentCpus: " + currentCpus);
+                }
 
                 long remainingLength = rcl.getRemainingCloudletLength();
                 double estimatedFinishTime = CloudSim.clock()
@@ -441,9 +450,22 @@ public class CloudletSchedulerSpaceShared extends CloudletScheduler {
             ResCloudlet rcl = new ResCloudlet(cloudlet);
             rcl.setCloudletStatus(Cloudlet.QUEUED);
             getCloudletWaitingList().add(rcl);
+            Config.WAITINGLIST_SIZE++;
+            if (((Tuple) rcl.getCloudlet()).getTupleType().equals("CAMERA") ||
+                    ((Tuple) rcl.getCloudlet()).getTupleType().equals("MOTION_VIDEO_STREAM") ||
+                    ((Tuple) rcl.getCloudlet()).getTupleType().equals("OBJECT_LOCATION") ||
+                    ((Tuple) rcl.getCloudlet()).getTupleType().equals("DETECTED_OBJECT") ||
+                    ((Tuple) rcl.getCloudlet()).getTupleType().equals("PTZ_PARAMS")) {
+                Config.WAITINGLIST_SIZE_APP1++;
+            } else if (((Tuple) rcl.getCloudlet()).getTupleType().equals("BG_VALUE") ||
+                    ((Tuple) rcl.getCloudlet()).getTupleType().equals("PATIENT_DATA") ||
+                    ((Tuple) rcl.getCloudlet()).getTupleType().equals("SYMPTOMS_INFO") ||
+                    ((Tuple) rcl.getCloudlet()).getTupleType().equals("DIAGNOSTIC_RESULT") ||
+                    ((Tuple) rcl.getCloudlet()).getTupleType().equals("VISUAL_RESULT")) {
+                Config.WAITINGLIST_SIZE_APP2++;
+            }
 
             //TODO: 根据剩余时间大小将新任务插入到等待队列合适的位置上(按照剩余处理时间从小到大排序)
-//            List<ResCloudlet> cloudletWaitingList = getCloudletWaitingList();
             double remainTime = ((Tuple) rcl.getCloudlet()).getTolerantTime() -
                     (CloudSim.clock() - ((Tuple) rcl.getCloudlet()).getProduceTime());
             ((Tuple) rcl.getCloudlet()).setRemainTime(remainTime);
@@ -452,6 +474,8 @@ public class CloudletSchedulerSpaceShared extends CloudletScheduler {
             if (getCloudletWaitingList().size() == 0) {
                 getCloudletWaitingList().add(rcl);
                 position = 0;
+            } else if (((Tuple) rcl.getCloudlet()).getAppId().equals("dcns")) {
+                position = getCloudletWaitingList().size() - 1;
             } else {
                 position = getCloudletWaitingList().size() - 1;
                 for (int i = getCloudletWaitingList().size() - 1; i >= 0; i--) {
@@ -548,6 +572,7 @@ public class CloudletSchedulerSpaceShared extends CloudletScheduler {
 
         for (ResCloudlet rcl : getCloudletWaitingList()) {
             if (rcl.getCloudletId() == cloudletId) {
+                Config.WAITINGLIST_SIZE++;
                 return rcl.getCloudletStatus();
             }
         }

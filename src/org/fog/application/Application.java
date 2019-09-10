@@ -216,7 +216,7 @@ public class Application {
                                 (long) (edge.getTupleCpuLength()), inputTuple.getNumberOfPes(), (long) (edge.getTupleNwLength()),
                                 inputTuple.getCloudletOutputSize(), inputTuple.getUtilizationModelCpu(),
                                 inputTuple.getUtilizationModelRam(), inputTuple.getUtilizationModelBw(),
-                                edge.getTupleCpuLength() / getModuleByName(moduleName).getMips() * 3);
+                                edge.getTupleCpuLength() / getModuleByName(moduleName).getMips() * 10);
                         tuple.setActualTupleId(inputTuple.getActualTupleId());
                         tuple.setUserId(inputTuple.getUserId());
                         tuple.setAppId(inputTuple.getAppId());
@@ -231,6 +231,7 @@ public class Application {
                         //tuple.setActuatorId(actuatorId);
                         //TODO: 添加一个源设备的id,以便于最终完成的tuple能够返回源设备
                         tuple.setBeginDeviceId(beginDeviceId);
+                        tuple.setTargetId(sourceDeviceId);
 //                        FogDevice sourceDevice = (FogDevice) CloudSim.getEntity(sourceDeviceId);
 //                        if (tuple.getDestModuleName().equals("PTZ_CONTROL"))
 //                            if (!sourceDevice.getChildrenIds().contains(tuple.getBeginDeviceId()))
@@ -244,7 +245,7 @@ public class Application {
                                 (long) (edge.getTupleCpuLength()), inputTuple.getNumberOfPes(), (long) (edge.getTupleNwLength()),
                                 inputTuple.getCloudletOutputSize(), inputTuple.getUtilizationModelCpu(),
                                 inputTuple.getUtilizationModelRam(), inputTuple.getUtilizationModelBw(),
-                                edge.getTupleCpuLength() / getModuleByName(moduleName).getMips() * 3);
+                                edge.getTupleCpuLength() / getModuleByName(moduleName).getMips() * 10);
                         //此步骤实现的是actualTupleId在任务之间的传承
                         tuple.setActualTupleId(inputTuple.getActualTupleId());
                         tuple.setUserId(inputTuple.getUserId());
@@ -256,6 +257,7 @@ public class Application {
                         tuple.setSourceModuleId(sourceModuleId);
                         //TODO: 添加一个源设备的id以及从邻居节点发送过来的标志位,以便于最终完成的tuple能够返回源设备
                         tuple.setBeginDeviceId(beginDeviceId);
+                        tuple.setTargetId(sourceDeviceId);
                         Logger.debug(CloudSim.getEntityName(sourceDeviceId), "Change tuple " +
                                 inputTuple.getCloudletId() + " to tuple " + tuple.getCloudletId() + " .");
 //                        System.out.println("Change tuple " +
