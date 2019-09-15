@@ -15,7 +15,7 @@ public class Config {
     public static double FOG_DEVICE_COST_PER_STORAGE = 0.001;
     public static double FOG_DEVICE_COST_PER_BW = 0.0;
 
-//    public static int SEND_NEIGHBOR = 0;
+    //    public static int SEND_NEIGHBOR = 0;
     public static int SEND_NEIGHBOR_SUCCESS = 0;
     public static int SEND_NEIGHBOR_SUCCESS_APP1 = 0;
     public static int SEND_NEIGHBOR_SUCCESS_APP2 = 0;
@@ -30,4 +30,7 @@ public class Config {
     public static int EXECLIST_SIZE_IN_WAITINGLIST = 0;
     public static int EXECLIST_SIZE_IN_WAITINGLIST_APP1 = 0;
     public static int EXECLIST_SIZE_IN_WAITINGLIST_APP2 = 0;
+
+    public static int TUPLE_ALL = 0;
+    public static int TUPLE_IN_LIMIT_TIME = 0;
 }

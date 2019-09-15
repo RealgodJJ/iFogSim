@@ -93,6 +93,8 @@ public class CloudletSchedulerSpaceShared extends CloudletScheduler {
 
         // each machine in the exec list has the same amount of cpu
         for (ResCloudlet rcl : getCloudletExecList()) {
+            ((Tuple) rcl.getCloudlet()).setRemainTime(((Tuple) rcl.getCloudlet()).getTolerantTime() -
+                    (currentTime - ((Tuple) rcl.getCloudlet()).getProduceTime()));
             rcl.updateCloudletFinishedSoFar((long) (getCapacity(mipsShare) * timeSpam * rcl.getNumberOfPes() * Consts.MILLION));
         }
 
@@ -328,6 +330,11 @@ public class CloudletSchedulerSpaceShared extends CloudletScheduler {
 //        System.out.println(rcl.getMachineId() + ": " + isStatusChanged);
         rcl.finalizeCloudlet();
         getCloudletFinishedList().add(rcl);
+        Config.TUPLE_ALL++;
+        if (((Tuple) rcl.getCloudlet()).getRemainTime() >= 0) {
+            Config.TUPLE_IN_LIMIT_TIME++;
+        }
+
         //归还cloudlet使用的Pe数量
         usedPes -= rcl.getNumberOfPes();
     }

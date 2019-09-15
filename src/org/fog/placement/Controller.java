@@ -199,6 +199,8 @@ public class Controller extends SimEntity {
         System.out.println("WAITINGLIST: " + Config.WAITINGLIST_SIZE);
         System.out.println("WAITINGLIST_APP1: " + Config.WAITINGLIST_SIZE_APP1);
         System.out.println("WAITINGLIST_APP2: " + Config.WAITINGLIST_SIZE_APP2);
+        System.out.println("TUPLE_ALL: " + Config.TUPLE_ALL);
+        System.out.println("TUPLE_IN_LIMIT_TIME: " + Config.TUPLE_IN_LIMIT_TIME);
 
         System.out.println("EXECLIST FROM WAITINGLIST: " + Config.EXECLIST_SIZE_IN_WAITINGLIST);
 //        System.out.println("EXECLIST FROM WAITINGLIST APP1: " + Config.EXECLIST_SIZE_IN_WAITINGLIST_APP1);

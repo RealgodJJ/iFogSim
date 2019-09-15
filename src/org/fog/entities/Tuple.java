@@ -66,8 +66,8 @@ public class Tuple extends Cloudlet {
         //设置任务产生的时间
         setProduceTime(CloudSim.clock());
         //设置任务的容忍时间
-//        setTolerantTime(tolerantTime);
-        setTolerantTime(5000);
+        setTolerantTime(tolerantTime);
+//        setTolerantTime(5000);
     }
 
     public Tuple(String appId, int cloudletId, int direction, long cloudletLength, int pesNumber,
