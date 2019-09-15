@@ -8,7 +8,6 @@ import org.cloudbus.cloudsim.core.SimEntity;
 import org.cloudbus.cloudsim.core.SimEvent;
 import org.fog.application.AppEdge;
 import org.fog.application.AppLoop;
-import org.fog.application.AppModule;
 import org.fog.application.Application;
 import org.fog.utils.FogEvents;
 import org.fog.utils.FogUtils;
@@ -100,7 +99,7 @@ public class Sensor extends SimEntity {
 
         Tuple tuple = new Tuple(getAppId(), FogUtils.generateTupleId(), Tuple.UP, cpuLength, 1, nwLength, outputSize,
                 new UtilizationModelFull(), new UtilizationModelFull(), new UtilizationModelFull(),
-                _edge.getTupleCpuLength() / getApp().getModuleByName(_edge.getDestination()).getMips() * 3);
+                _edge.getTupleCpuLength() / getApp().getModuleByName(_edge.getDestination()).getMips() * 10);
         tuple.setUserId(getUserId());
         tuple.setTupleType(getTupleType());
 
