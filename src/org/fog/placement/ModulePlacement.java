@@ -10,8 +10,6 @@ import org.fog.application.Application;
 import org.fog.entities.FogDevice;
 
 public abstract class ModulePlacement {
-
-
     public static int ONLY_CLOUD = 1;
     public static int EDGEWARDS = 2;
     public static int USER_MAPPING = 3;

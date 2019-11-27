@@ -38,7 +38,7 @@ public class FogLinearPowerModel implements PowerModel {
 	public FogLinearPowerModel(double maxPower, double staticPower) {
 		setMaxPower(maxPower);
 		setStaticPower(staticPower);
-		setConstant((maxPower - getStaticPower()) / 100);
+		setConstant((getMaxPower() - getStaticPower()) / 100);
 	}
 
 	/*
