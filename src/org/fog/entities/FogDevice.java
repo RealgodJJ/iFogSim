@@ -23,6 +23,7 @@ import org.fog.scheduler.StreamOperatorScheduler;
 import org.fog.utils.*;
 
 public class FogDevice extends PowerDataCenter {
+    double zeroTime = 0;
     //    protected Queue<Tuple> waitingQueue;
     protected Queue<Tuple> northTupleQueue;
     //向下传传输的对列<tuple, childId>
@@ -778,22 +779,64 @@ public class FogDevice extends PowerDataCenter {
         double currentEnergyConsumption = getEnergyConsumption();
         double newEnergyConsumption = currentEnergyConsumption + (timeNow - lastUtilizationUpdateTime)
                 * getHost().getPowerModel().getPower(lastUtilization);
-//        System.out.println("id: " + getHost().getId() + "\nnew energy consumption: " + newEnergyConsumption);
         setEnergyConsumption(newEnergyConsumption);
 
-		/*if(getName().equals("d-0")){
-			System.out.println("------------------------");
-			System.out.println("Utilization = "+lastUtilization);
-			System.out.println("Power = "+getHost().getPowerModel().getPower(lastUtilization));
-			System.out.println(timeNow-lastUtilizationUpdateTime);
-		}*/
-
+        //TODO: 计算利用率
         double currentCost = getTotalCost();
-        double newcost = currentCost + (timeNow - lastUtilizationUpdateTime) * getRatePerMips() * lastUtilization * getHost().getTotalMips();
+        double newcost = currentCost + (timeNow - lastUtilizationUpdateTime) * getRatePerMips()
+                * lastUtilization * getHost().getTotalMips();
         setTotalCost(newcost);
 
+//        if (lastUtilization != 1 /*&& lastUtilization != 0*/) {
+//            System.out.println("FUCK IT ALL" + lastUtilization);
+//            if (lastUtilization == 0) {
+//                double a = timeNow - lastUtilizationUpdateTime;
+//                zeroTime += a;
+//                System.out.println("FUCK IT ALL" + zeroTime);
+//            }
+//        }
+
+        //TODO: 更新设备的使用率
         lastUtilization = Math.min(1, totalMipsAllocated / getHost().getTotalMips());
         lastUtilizationUpdateTime = timeNow;
+    }
+
+    //TODO: 更新在进行模块应用分配时，当前设备的预估能量
+    public double estimateEnergyConsumption(List<String> currentModuleMap, Application application) {
+        double deviceEnergyConsumption = 0;
+//        for (String moduleName : currentModuleMap) {
+//            AppModule appModule = application.getModuleByName(moduleName);
+//            double appModuleMips = appModule.getMips();
+//            int totalMips = getHost().getTotalMips();
+//            lastUtilization = Math.min(1, appModuleMips / totalMips);
+//
+//            //因为应用模块使用的时分策略，所以使用率会有波动性的变化，此时我们只使用峰值的应用模块占用率
+//            //计算设备预估的计算功耗
+//            for (AppEdge appEdge : application.getEdges()) {
+//                if (appEdge.getDestination().equals(moduleName)) {
+////                    deviceEnergyConsumption += (appEdge.getTupleCpuLength() / appModule.getMips()) * getHost().getPowerModel().getPower(lastUtilization);
+//                }
+//            }
+//        }
+
+        for (String moduleName : currentModuleMap) {
+            //因为应用模块使用的时分策略，所以使用率
+            AppModule appModule = application.getModuleByName(moduleName);
+            double appModuleMips = appModule.getMips();
+            int totalMips = getHost().getTotalMips();
+            lastUtilization = Math.min(1, appModuleMips / totalMips);
+
+            //因为应用模块使用的空分策略，所以使用率会有波动性的变化，此时我们只使用峰值的应用模块占用率
+            //计算设备预估的计算功耗
+            for (AppEdge appEdge : application.getEdges()) {
+                if (appEdge.getDestination().equals(moduleName)) {
+                    deviceEnergyConsumption += (appEdge.getTupleCpuLength() / appModule.getMips()) *
+                            getHost().getPowerModel().getPower(lastUtilization);
+                }
+            }
+        }
+//        System.out.println(getName() + ": " + deviceEnergyConsumption);
+        return deviceEnergyConsumption;
     }
 
     protected void processAppSubmit(SimEvent ev) {
@@ -995,21 +1038,24 @@ public class FogDevice extends PowerDataCenter {
 //            sendBackToOriginal(tuple, tuple.getBeginDeviceId());
 //        }
 
-        if (getHost().getVmList().size() > 0) {
-            final AppModule operator = (AppModule) getHost().getVmList().get(0);
-            if (CloudSim.clock() > 0) {
-                //取消pe单元的分配
-                getHost().getVmScheduler().deallocatePesForVm(operator);
-                //添加pe单元的分配
-                getHost().getVmScheduler().allocatePesForVm(operator, new ArrayList<Double>() {
-                    protected static final long serialVersionUID = 1L;
-
-                    {
-                        add((double) getHost().getTotalMips());
-                    }
-                });
-            }
-        }
+//        if (getHost().getVmList().size() > 0) {
+//            for (int i = 0; i < getHost().getVmList().size(); i++) {
+////                final AppModule operator = (AppModule) getHost().getVmList().get(0);
+//                final AppModule operator = (AppModule) getHost().getVmList().get(i);
+//                if (CloudSim.clock() > 0) {
+//                    //取消pe单元的分配
+//                    getHost().getVmScheduler().deallocatePesForVm(operator);
+//                    //添加pe单元的分配
+//                    getHost().getVmScheduler().allocatePesForVm(operator, new ArrayList<Double>() {
+//                        protected static final long serialVersionUID = 1L;
+//
+//                        {
+//                            add((double) getHost().getTotalMips());
+//                        }
+//                    });
+//                }
+//            }
+//        }
 
         //（4）判断整个应用是否处理完成
         if (getName().equals("cloud") && tuple.getDestModuleName() == null) {

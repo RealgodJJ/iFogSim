@@ -41,7 +41,7 @@ public class FogQuadraticPowerModel implements PowerModel {
         if (utilization < 0 || utilization > 1) {
             throw new IllegalArgumentException("Utilization value must be between 0 and 1");
         }
-        return 0;
+        return getStaticPower() + getQuadraticConstant() * Math.pow(utilization * 100, 2);
     }
 
     public double getMaxPower() {

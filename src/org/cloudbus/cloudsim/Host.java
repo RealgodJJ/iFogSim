@@ -219,6 +219,7 @@ public class Host {
 			return false;
 		}
 
+		//TODO: 使用空间分配策略时，这里面会报错
 		if (!getVmScheduler().allocatePesForVm(vm, vm.getCurrentRequestedMips())) {
 			Log.printLine("[VmScheduler.vmCreate] Allocation of VM #" + vm.getId() + " to Host #" + getId()
 					+ " failed by MIPS");

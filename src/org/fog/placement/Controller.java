@@ -249,6 +249,13 @@ public class Controller extends SimEntity {
         submitApplication(application, 0, modulePlacement);
     }
 
+    //TODO: 一次提交一组应用（加循环）
+    public void submitApplications(List<Application> applications, ModulePlacement modulePlacement) {
+        for (Application application : applications) {
+            submitApplication(application, 0, modulePlacement);
+        }
+    }
+
 
     private void processAppSubmit(SimEvent ev) {
         Application app = (Application) ev.getData();

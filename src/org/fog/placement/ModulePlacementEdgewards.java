@@ -18,19 +18,23 @@ import org.fog.entities.Tuple;
 import org.fog.utils.Logger;
 
 public class ModulePlacementEdgewards extends ModulePlacement {
+    private double totalEnergyConsumption;
 
     protected ModuleMapping moduleMapping;
     protected List<Sensor> sensors;
     protected List<Actuator> actuators;
     protected Map<Integer, Double> currentCpuLoad;
+    // 确定总设备的数量和总模块的数量
+    int numOfService = 0, numOfDevice = 0;
 
     /**
-     * Stores the current mapping of application modules to fog devices
+     * Stores the current mapping of application modules to fog devices（初始存放的是程序员设定好的模块和设备的映射）
      */
     protected Map<Integer, List<String>> currentModuleMap;
-    protected Map<Integer, Map<String, Double>> currentModuleLoadMap;
+    protected Map<Integer, Map<String, Double>> currentModuleLoadMap;//初始只是设定好映射，但不放入模块大小，因为没有确定模块的最终放置位置
     protected Map<Integer, Map<String, Integer>> currentModuleInstanceNum;
 
+    //比ModulePlacementMapping多传感器和执行器参数
     public ModulePlacementEdgewards(List<FogDevice> fogDevices, List<Sensor> sensors, List<Actuator> actuators,
                                     Application application, ModuleMapping moduleMapping) {
         this.setFogDevices(fogDevices);
@@ -51,31 +55,67 @@ public class ModulePlacementEdgewards extends ModulePlacement {
             getCurrentModuleInstanceNum().put(dev.getId(), new HashMap<String, Integer>());
         }
 
+        numOfDevice = getCurrentModuleMap().size();
+
+        // Map<deviceName, List<moduleName>>
+//        Map<String, List<String>> tempModuleMapping = getModuleMapping().getModuleMapping();
+//        for (String deviceName : tempModuleMapping.keySet()) {
+//            List<String> tempModuleNames = tempModuleMapping.get(deviceName);
+//            for (String moduleName : tempModuleNames) {
+//
+//            }
+//        }
+
         mapModules();
         setModuleInstanceCountMap(getCurrentModuleInstanceNum());
     }
 
+    public ModulePlacementEdgewards() {
+    }
+
     @Override
     protected void mapModules() {
+        //按照初始设定的moduleMapping，先将设备和模块的映射放置好
+        initModulePlacement();
 
+        List<List<Integer>> leafToRootPaths = getLeafToRootPaths();
+        /*for (List<Integer> path : leafToRootPaths) {
+            for (int deviceId : path) {
+                System.out.println("HAHAHAHAAHAHAAHA: " + CloudSim.getEntityName(deviceId));
+            }
+            System.out.println();
+        }*/
+
+        for (List<Integer> path : leafToRootPaths) {
+            placeModulesInPath(path);
+        }
+
+        //TODO: 更新整体系统架构的能量
+        estimateEnergyConsumption();
+
+        for (int deviceId : getCurrentModuleMap().keySet()) {
+            for (String module : getCurrentModuleMap().get(deviceId)) {
+                createModuleInstanceOnDevice(getApplication().getModuleByName(module), getFogDeviceById(deviceId));
+            }
+        }
+    }
+
+    private void estimateEnergyConsumption() {
+        List<FogDevice> fogDevices = getFogDevices();
+        for (FogDevice fogDevice : fogDevices) {
+            //TODO: 调用FogDevice对象的更新功耗的对象（最好自己重新创建一个新的方法）传入模块与设备的映射
+            totalEnergyConsumption += fogDevice.estimateEnergyConsumption(currentModuleMap.get(fogDevice.getId()), getApplication());
+            System.out.println("totalEnergyConsumption: " + totalEnergyConsumption + getApplication().getAppId());
+        }
+    }
+
+    protected void initModulePlacement() {
         for (String deviceName : getModuleMapping().getModuleMapping().keySet()) {
             for (String moduleName : getModuleMapping().getModuleMapping().get(deviceName)) {
                 int deviceId = CloudSim.getEntityId(deviceName);
                 getCurrentModuleMap().get(deviceId).add(moduleName);
                 getCurrentModuleLoadMap().get(deviceId).put(moduleName, 0.0);
                 getCurrentModuleInstanceNum().get(deviceId).put(moduleName, 0);
-            }
-        }
-
-        List<List<Integer>> leafToRootPaths = getLeafToRootPaths();
-
-        for (List<Integer> path : leafToRootPaths) {
-            placeModulesInPath(path);
-        }
-
-        for (int deviceId : getCurrentModuleMap().keySet()) {
-            for (String module : getCurrentModuleMap().get(deviceId)) {
-                createModuleInstanceOnDevice(getApplication().getModuleByName(module), getFogDeviceById(deviceId));
             }
         }
     }
@@ -123,16 +163,18 @@ public class ModulePlacementEdgewards extends ModulePlacement {
         return 0;
     }
 
-    private void placeModulesInPath(List<Integer> path) {
+    protected void placeModulesInPath(List<Integer> path) {
         if (path.size() == 0) return;
         List<String> placedModules = new ArrayList<String>();
         Map<AppEdge, Double> appEdgeToRate = new HashMap<AppEdge, Double>();
 
         /**
          * Periodic edges have a fixed periodicity of tuples, so setting the tuple rate beforehand
+         * (周期边具有固定的元组周期性，因此请事先设置元组发射频率)
          */
         for (AppEdge edge : getApplication().getEdges()) {
             if (edge.isPeriodic()) {
+                //从最后一个模块到终端执行器都会设置周期
                 appEdgeToRate.put(edge, 1 / edge.getPeriodicity());
             }
         }
@@ -141,8 +183,8 @@ public class ModulePlacementEdgewards extends ModulePlacement {
             FogDevice device = getFogDeviceById(deviceId);
             Map<String, Integer> sensorsAssociated = getAssociatedSensors(device);
             Map<String, Integer> actuatorsAssociated = getAssociatedActuators(device);
-            placedModules.addAll(sensorsAssociated.keySet()); // ADDING ALL SENSORS TO PLACED LIST
-            placedModules.addAll(actuatorsAssociated.keySet()); // ADDING ALL ACTUATORS TO PLACED LIST
+            placedModules.addAll(sensorsAssociated.keySet()); // ADDING ALL KIND SENSORS TO PLACED LIST
+            placedModules.addAll(actuatorsAssociated.keySet()); // ADDING ALL KIND ACTUATORS TO PLACED LIST
 
             /*
              * Setting the rates of application edges emanating from sensors
@@ -150,6 +192,7 @@ public class ModulePlacementEdgewards extends ModulePlacement {
             for (String sensor : sensorsAssociated.keySet()) {
                 for (AppEdge edge : getApplication().getEdges()) {
                     if (edge.getSource().equals(sensor)) {
+                        //传感器数量 * 发射频率
                         appEdgeToRate.put(edge, sensorsAssociated.get(sensor) * getRateOfSensor(sensor));
                     }
                 }
@@ -204,6 +247,7 @@ public class ModulePlacementEdgewards extends ModulePlacement {
                             }
                         }
                         if (totalCpuLoad + getCurrentCpuLoad().get(deviceId) > device.getHost().getTotalMips()) {
+                            //TODO: 当前剩余空间不够装载这个模块
                             Logger.debug("ModulePlacementEdgeward", "Need to shift module " + moduleName + " upstream from device " + device.getName());
                             List<String> _placedOperators = shiftModuleNorth(moduleName, totalCpuLoad, deviceId, modulesToPlace);
                             for (String placedOperator : _placedOperators) {
@@ -211,7 +255,8 @@ public class ModulePlacementEdgewards extends ModulePlacement {
                                     placedModules.add(placedOperator);
                             }
                         } else {
-                            placedModules.add(moduleName);
+                            //这里为什么还有再添加一遍这个模块
+//                            placedModules.add(moduleName);
                             getCurrentCpuLoad().put(deviceId, getCurrentCpuLoad().get(deviceId) + totalCpuLoad);
                             getCurrentModuleInstanceNum().get(deviceId).put(moduleName, getCurrentModuleInstanceNum().get(deviceId).get(moduleName) + 1);
                             Logger.debug("ModulePlacementEdgeward", "AppModule " + moduleName + " can be created on device " + device.getName());
@@ -228,6 +273,7 @@ public class ModulePlacementEdgewards extends ModulePlacement {
 
                     if (totalCpuLoad + getCurrentCpuLoad().get(deviceId) > device.getHost().getTotalMips()) {
                         Logger.debug("ModulePlacementEdgeward", "Placement of operator " + moduleName + "NOT POSSIBLE on device " + device.getName());
+                        System.out.println("ModulePlacementEdgeward: " + "Placement of operator " + moduleName + "NOT POSSIBLE on device " + device.getName());
                     } else {
                         Logger.debug("ModulePlacementEdgeward", "Placement of operator " + moduleName + " on device " + device.getName() + " successful.");
                         getCurrentCpuLoad().put(deviceId, totalCpuLoad + getCurrentCpuLoad().get(deviceId));

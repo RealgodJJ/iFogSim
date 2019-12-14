@@ -9,7 +9,7 @@ public class ModuleMapping {
     /**
      * Mapping from node name to list of <moduleName, numInstances> of instances to be launched on node
      */
-    //Map<moduleName, numInstances>
+    //Map<deviceName, moduleName>
     protected Map<String, List<String>> moduleMapping;
 
     public static ModuleMapping createModuleMapping() {

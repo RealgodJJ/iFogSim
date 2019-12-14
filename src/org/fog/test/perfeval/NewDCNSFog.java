@@ -1,9 +1,9 @@
 package org.fog.test.perfeval;
 
-import java.math.BigDecimal;
-import java.util.*;
-
-import org.cloudbus.cloudsim.*;
+import org.cloudbus.cloudsim.Host;
+import org.cloudbus.cloudsim.Log;
+import org.cloudbus.cloudsim.Pe;
+import org.cloudbus.cloudsim.Storage;
 import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.power.PowerHost;
 import org.cloudbus.cloudsim.provisioners.RamProvisionerSimple;
@@ -13,27 +13,27 @@ import org.fog.application.AppEdge;
 import org.fog.application.AppLoop;
 import org.fog.application.Application;
 import org.fog.application.selectivity.FractionalSelectivity;
-import org.fog.entities.Actuator;
-import org.fog.entities.FogBroker;
-import org.fog.entities.FogDevice;
-import org.fog.entities.FogDeviceCharacteristics;
-import org.fog.entities.Sensor;
-import org.fog.entities.Tuple;
-import org.fog.placement.*;
+import org.fog.entities.*;
+import org.fog.placement.Controller;
+import org.fog.placement.ModuleMapping;
+import org.fog.placement.ModulePlacementMapping;
+import org.fog.placement.PSOModulePlacementEdgewards;
 import org.fog.policy.AppModuleAllocationPolicy;
 import org.fog.scheduler.StreamOperatorScheduler;
-import org.fog.utils.FogLinearPowerModel;
 import org.fog.utils.FogQuadraticPowerModel;
 import org.fog.utils.FogUtils;
 import org.fog.utils.TimeKeeper;
 import org.fog.utils.distribution.DeterministicDistribution;
+
+import java.math.BigDecimal;
+import java.util.*;
 
 /**
  * Simulation setup for case study 2 - Intelligent Surveillance
  *
  * @author Harshit Gupta
  */
-public class DCNSFog {
+public class NewDCNSFog {
     private static List<FogDevice> fogDevices = new ArrayList<FogDevice>();
     private static List<Sensor> sensors = new ArrayList<Sensor>();
     private static List<Actuator> actuators = new ArrayList<Actuator>();
@@ -147,10 +147,14 @@ public class DCNSFog {
 //                    (CLOUD) ? (new ModulePlacementMapping(fogDevices, clientApplication, moduleMapping1))
 //                            : (new ModulePlacementEdgewards(fogDevices, sensors, actuators, clientApplication, moduleMapping1)));
 
-            controller.submitApplication(cameraApplication, new ModulePlacementMapping(fogDevices, cameraApplication, moduleMapping));
-            controller.submitApplication(clientApplication, new ModulePlacementMapping(fogDevices, clientApplication, moduleMapping1));
-//            controller.submitApplication(clientApplication, new ModulePlacementOnlyCloud(fogDevices, sensors, actuators, cameraApplication));
-//            controller.submitApplication(clientApplication, new ModulePlacementOnlyCloud(fogDevices, sensors, actuators, clientApplication));
+            List<Application> applicationList = new ArrayList<Application>() {{
+                add(cameraApplication);
+                add(clientApplication);
+            }};
+
+            controller.submitApplications(applicationList,
+                    (CLOUD) ? (new ModulePlacementMapping(fogDevices, clientApplication, moduleMapping1))
+                            : (new PSOModulePlacementEdgewards(fogDevices, sensors, actuators, applicationList, moduleMapping1)));
 
             //5.
             TimeKeeper.getInstance().setSimulationStartTime(Calendar.getInstance().getTimeInMillis());
@@ -371,7 +375,11 @@ public class DCNSFog {
         List<Pe> peList = new ArrayList<Pe>();
 
         // 3. Create PEs and add these into a list.
-        peList.add(new Pe(0, new PeProvisionerOverbooking(mips))); // need to store Pe id and MIPS Rating
+        //TODO: 多创建几个Pe应该就可以使用了
+//        peList.add(new Pe(0, new PeProvisionerOverbooking(mips))); // need to store Pe id and MIPS Rating
+        for (int i = 0; i < 6; i++) {
+            peList.add(new Pe(i, new PeProvisionerOverbooking(mips))); // need to store Pe id and MIPS Rating
+        }
 
         int hostId = FogUtils.generateEntityId();
         long storage = 1000000; // host storage
@@ -379,7 +387,11 @@ public class DCNSFog {
 
         //相对于Host加入了功耗计算的模型
         PowerHost host = new PowerHost(hostId, new RamProvisionerSimple(ram), new BwProvisionerOverbooking(bw), storage,
-                peList, new StreamOperatorScheduler(peList), new FogLinearPowerModel(busyPower, idlePower));
+                peList, new StreamOperatorScheduler(peList), new FogQuadraticPowerModel(busyPower, idlePower));
+
+        //TODO: 应用模块使用空间分配策略
+//        PowerHost host = new PowerHost(hostId, new RamProvisionerSimple(ram), new BwProvisionerOverbooking(bw), storage,
+//                peList, new VmSchedulerSpaceShared(peList), new FogQuadraticPowerModel(busyPower, idlePower));
 
         List<Host> hostList = new ArrayList<Host>();
         hostList.add(host);
@@ -420,7 +432,10 @@ public class DCNSFog {
         List<Pe> peList = new ArrayList<Pe>();
 
         // 3. Create PEs and add these into a list.
-        peList.add(new Pe(0, new PeProvisionerOverbooking(mips))); // need to store Pe id and MIPS Rating
+//        peList.add(new Pe(0, new PeProvisionerOverbooking(mips))); // need to store Pe id and MIPS Rating
+        for (int i = 0; i < 6; i++) {
+            peList.add(new Pe(i, new PeProvisionerOverbooking(mips))); // need to store Pe id and MIPS Rating
+        }
 
         int hostId = FogUtils.generateEntityId();
         long storage = 1000000; // host storage
@@ -428,7 +443,12 @@ public class DCNSFog {
 
         //相对于Host加入了功耗计算的模型
         PowerHost host = new PowerHost(hostId, new RamProvisionerSimple(ram), new BwProvisionerOverbooking(bw), storage,
-                peList, new StreamOperatorScheduler(peList), new FogLinearPowerModel(busyPower, idlePower));
+                peList, new StreamOperatorScheduler(peList), new FogQuadraticPowerModel(busyPower, idlePower));
+
+        //TODO: 应用模块使用空间分配策略
+//        PowerHost host = new PowerHost(hostId, new RamProvisionerSimple(ram), new BwProvisionerOverbooking(bw), storage,
+//                peList, new VmSchedulerSpaceShared(peList), new FogQuadraticPowerModel(busyPower, idlePower));
+
 
         List<Host> hostList = new ArrayList<Host>();
         hostList.add(host);

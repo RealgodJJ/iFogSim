@@ -87,9 +87,15 @@ public class VmSchedulerSpaceShared extends VmScheduler {
 	 */
 	@Override
 	public void deallocatePesForVm(Vm vm) {
+//		if (getPeAllocationMap().get(vm.getUid()) == null) {
+//			System.out.println("为什么空了？");
+//			return;
+//		}
 		getFreePes().addAll(getPeAllocationMap().get(vm.getUid()));
 		getPeAllocationMap().remove(vm.getUid());
 
+//		if (getMipsMap().get(vm.getUid()) == null)
+//			return;
 		double totalMips = 0;
 		for (double mips : getMipsMap().get(vm.getUid())) {
 			totalMips += mips;
