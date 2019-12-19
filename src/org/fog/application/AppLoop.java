@@ -54,6 +54,15 @@ public class AppLoop {
         return result;
     }
 
+    //TODO: 应用循环是否含有这个应用模块
+    public boolean hasModule(String module) {
+        for (String moduleName : modules) {
+            if (moduleName.equals(module))
+                return true;
+        }
+        return false;
+    }
+
     public List<String> getModules() {
         return modules;
     }

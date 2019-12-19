@@ -140,15 +140,15 @@ public class DCNSFog {
             //4.
             controller = new Controller("master-controller", fogDevices, sensors, actuators);
 
-//            controller.submitApplication(cameraApplication,
-//                    (CLOUD) ? (new ModulePlacementMapping(fogDevices, cameraApplication, moduleMapping))
-//                            : (new ModulePlacementEdgewards(fogDevices, sensors, actuators, cameraApplication, moduleMapping)));
-//            controller.submitApplication(clientApplication,
-//                    (CLOUD) ? (new ModulePlacementMapping(fogDevices, clientApplication, moduleMapping1))
-//                            : (new ModulePlacementEdgewards(fogDevices, sensors, actuators, clientApplication, moduleMapping1)));
+            controller.submitApplication(cameraApplication,
+                    (CLOUD) ? (new ModulePlacementMapping(fogDevices, cameraApplication, moduleMapping))
+                            : (new ModulePlacementEdgewards(fogDevices, sensors, actuators, cameraApplication, moduleMapping)));
+            controller.submitApplication(clientApplication,
+                    (CLOUD) ? (new ModulePlacementMapping(fogDevices, clientApplication, moduleMapping1))
+                            : (new ModulePlacementEdgewards(fogDevices, sensors, actuators, clientApplication, moduleMapping1)));
 
-            controller.submitApplication(cameraApplication, new ModulePlacementMapping(fogDevices, cameraApplication, moduleMapping));
-            controller.submitApplication(clientApplication, new ModulePlacementMapping(fogDevices, clientApplication, moduleMapping1));
+//            controller.submitApplication(cameraApplication, new ModulePlacementMapping(fogDevices, cameraApplication, moduleMapping));
+//            controller.submitApplication(clientApplication, new ModulePlacementMapping(fogDevices, clientApplication, moduleMapping1));
 //            controller.submitApplication(clientApplication, new ModulePlacementOnlyCloud(fogDevices, sensors, actuators, cameraApplication));
 //            controller.submitApplication(clientApplication, new ModulePlacementOnlyCloud(fogDevices, sensors, actuators, clientApplication));
 
