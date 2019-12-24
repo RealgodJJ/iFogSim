@@ -20,10 +20,10 @@ public class PSOModulePlacementEdgewards extends ModulePlacementEdgewards {
     int T = 40;    // 设置迭代的次数是40
     double w = 0.9;    //设置初始惯性因子（w = (wmax - wmin) / Tmax * t）
     List<Integer> fogDeviceIds = new ArrayList<>();
-    List<String> appModuleNames = new ArrayList<>();
+    List<AppModule> appModules = new ArrayList<>();
     int numOfService = 0, numOfDevice = 0;    // 确定总设备的数量和总模块的数量
-    double[][] v;
-    List<Double[][]> vList = new ArrayList<>();
+    //    double[][] v;
+    List<double[][]> vList = new ArrayList<>();
     private List<Application> applicationList = new ArrayList<>(); //将所有的应用全部考虑在模块放置策略中
 
     public PSOModulePlacementEdgewards(List<FogDevice> fogDevices, List<Sensor> sensors, List<Actuator> actuators,
@@ -61,23 +61,18 @@ public class PSOModulePlacementEdgewards extends ModulePlacementEdgewards {
             numOfDevice++;
 //            List<String> appModulesInFogDevice = getCurrentModuleMap().get(fogDeviceId);
 //            for (String appModule : appModulesInFogDevice) {
-//                if (!appModuleNames.contains(appModule)) {
-//                    appModuleNames.add(appModule);
+//                if (!appModules.contains(appModule)) {
+//                    appModules.add(appModule);
 //                }
 //            }
         }
 
         for (Application application : getApplicationList()) {
             for (AppModule appModule : application.getModules()) {
-                appModuleNames.add(appModule.getName());
+                appModules.add(appModule);
                 numOfService++;
             }
         }
-
-        for (String appModuleName : appModuleNames) {
-
-        }
-
 
         //（2）将设备集合进行排序
         Collections.sort(fogDeviceIds);
@@ -104,27 +99,62 @@ public class PSOModulePlacementEdgewards extends ModulePlacementEdgewards {
     }
 
     private void initPopulation() {
-        v = new double[numOfDevice][numOfService];
+        double[][] v = new double[numOfDevice][numOfService];
         AppLoop appLoop1 = getApplicationList().get(0).getLoops().get(0);
         AppLoop appLoop2 = getApplicationList().get(1).getLoops().get(0);
-//        List<AppModule> appModules1 = getApplicationList().get(0).getModules();
-//        List<AppModule> appModules2 = getApplicationList().get(1).getModules();
+        List<AppModule> appModules1 = getApplicationList().get(0).getModules();
+        List<AppModule> appModules2 = getApplicationList().get(1).getModules();
 
         for (int k = 0; k < P; k++) {
             double dmax = 0;
             for (int i = 0; i < numOfDevice; i++) {
                 String deviceName = CloudSim.getEntityName(fogDeviceIds.get(i));
                 for (int j = 0; j < numOfService; j++) {
-                    String moduleName = appModuleNames.get(j);
+                    String moduleName = appModules.get(j).getName();
                     if (deviceName.startsWith("m")) {
                         if (appLoop1.isStartModule(moduleName)) {
-                            v[i][j] = 1;
-                        } else if (appLoop1.hasModule(moduleName)) {
+//                            if (appModules1.get(k).getName().equals(moduleName)) {
+                            if (k % 3 == 0)
+                                v[i][j] = 1;
+                            else if (k % 3 == 1) {
+                                if ((CloudSim.getEntityName(fogDeviceIds.get(i + 3)).startsWith("d")
+                                        || CloudSim.getEntityName(fogDeviceIds.get(i + 2)).startsWith("d")))
+                                    v[i][j] = 0.8;
+                                else
+                                    v[i][j] = 1;
+                            } else if (k % 3 == 2) {
+                                if ((CloudSim.getEntityName(fogDeviceIds.get(i + 2)).startsWith("d")
+                                        || CloudSim.getEntityName(fogDeviceIds.get(i + 1)).startsWith("d")))
+                                    v[i][j] = 0.8;
+                                else
+                                    v[i][j] = 1;
+                            }
+                        } else if (appLoop1.hasModule(moduleName)/*appModules1.contains(moduleName)*/) {
                             v[i][j] = v[i][j - 1] - 0.2;
                         }
                     } else if (deviceName.startsWith("n")) {
                         if (appLoop2.isStartModule(moduleName)) {
-                            v[i][j] = 1;
+                            if (k % 4 == 0)
+                                v[i][j] = 1;
+                            else if (k % 4 == 1) {
+                                if ((CloudSim.getEntityName(fogDeviceIds.get(i + 4)).startsWith("d")
+                                        || CloudSim.getEntityName(fogDeviceIds.get(i + 3)).startsWith("d")))
+                                    v[i][j] = 0.8;
+                                else
+                                    v[i][j] = 1;
+                            } else if (k % 4 == 2) {
+                                if ((CloudSim.getEntityName(fogDeviceIds.get(i + 3)).startsWith("d")
+                                        || CloudSim.getEntityName(fogDeviceIds.get(i + 2)).startsWith("d")))
+                                    v[i][j] = 0.8;
+                                else
+                                    v[i][j] = 1;
+                            } else if (k % 4 == 3) {
+                                if ((CloudSim.getEntityName(fogDeviceIds.get(i + 2)).startsWith("d")
+                                        || CloudSim.getEntityName(fogDeviceIds.get(i + 1)).startsWith("d")))
+                                    v[i][j] = 0.8;
+                                else
+                                    v[i][j] = 1;
+                            }
                         } else if (appLoop2.hasModule(moduleName)) {
                             v[i][j] = v[i][j - 1] - 0.2;
                         }
@@ -143,8 +173,10 @@ public class PSOModulePlacementEdgewards extends ModulePlacementEdgewards {
                         v[i][j] = 1;
                 }
             }
+            vList.add(v);
             System.out.println();
         }
+        System.out.println();
     }
 
     private void estimateEnergyConsumption() {
