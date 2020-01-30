@@ -380,4 +380,22 @@ public class Application {
     public void setEdgeMap(Map<String, AppEdge> edgeMap) {
         this.edgeMap = edgeMap;
     }
+
+
+    //判断appModule是否属于当前应用
+    public boolean hasThisAppModule(String targetModuleName) {
+        for (AppModule appModule : getModules())
+            if (appModule.getName().equals(targetModuleName))
+                return true;
+        return false;
+    }
+
+    //判断特定AppModule之前的AppEdge列表（可能不止一个AppEdge）
+    public List<AppEdge> getAppEdge(String targetModuleName) {
+        List<AppEdge> appEdges = new ArrayList<>();
+        for (AppEdge appEdge : getEdges())
+            if (appEdge.getDestination().equals(targetModuleName))
+                appEdges.add(appEdge);
+        return appEdges;
+    }
 }

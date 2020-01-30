@@ -24,8 +24,6 @@ public class ModulePlacementEdgewards extends ModulePlacement {
     protected List<Sensor> sensors;
     protected List<Actuator> actuators;
     protected Map<Integer, Double> currentCpuLoad;
-    // 确定总设备的数量和总模块的数量
-    int numOfService = 0, numOfDevice = 0;
 
     /**
      * Stores the current mapping of application modules to fog devices（初始存放的是程序员设定好的模块和设备的映射）
@@ -55,17 +53,6 @@ public class ModulePlacementEdgewards extends ModulePlacement {
             getCurrentModuleInstanceNum().put(dev.getId(), new HashMap<String, Integer>());
         }
 
-        numOfDevice = getCurrentModuleMap().size();
-
-        // Map<deviceName, List<moduleName>>
-//        Map<String, List<String>> tempModuleMapping = getModuleMapping().getModuleMapping();
-//        for (String deviceName : tempModuleMapping.keySet()) {
-//            List<String> tempModuleNames = tempModuleMapping.get(deviceName);
-//            for (String moduleName : tempModuleNames) {
-//
-//            }
-//        }
-
         mapModules();
         setModuleInstanceCountMap(getCurrentModuleInstanceNum());
     }
@@ -91,7 +78,7 @@ public class ModulePlacementEdgewards extends ModulePlacement {
         }
 
         //TODO: 更新整体系统架构的能量
-        estimateEnergyConsumption();
+//        estimateEnergyConsumption();
 
         for (int deviceId : getCurrentModuleMap().keySet()) {
             for (String module : getCurrentModuleMap().get(deviceId)) {
@@ -100,14 +87,14 @@ public class ModulePlacementEdgewards extends ModulePlacement {
         }
     }
 
-    private void estimateEnergyConsumption() {
-        List<FogDevice> fogDevices = getFogDevices();
-        for (FogDevice fogDevice : fogDevices) {
-            //TODO: 调用FogDevice对象的更新功耗的对象（最好自己重新创建一个新的方法）传入模块与设备的映射
-            totalEnergyConsumption += fogDevice.estimateEnergyConsumption(currentModuleMap.get(fogDevice.getId()), getApplication());
-            System.out.println("totalEnergyConsumption: " + totalEnergyConsumption + getApplication().getAppId());
-        }
-    }
+//    private void estimateEnergyConsumption() {
+//        List<FogDevice> fogDevices = getFogDevices();
+//        for (FogDevice fogDevice : fogDevices) {
+//            //TODO: 调用FogDevice对象的更新功耗的对象（最好自己重新创建一个新的方法）传入模块与设备的映射
+//            totalEnergyConsumption += fogDevice.estimateEnergyConsumption(currentModuleMap.get(fogDevice.getId()), getApplication());
+//            System.out.println("totalEnergyConsumption: " + totalEnergyConsumption + getApplication().getAppId());
+//        }
+//    }
 
     protected void initModulePlacement() {
         for (String deviceName : getModuleMapping().getModuleMapping().keySet()) {

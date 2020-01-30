@@ -1,5 +1,8 @@
 package org.fog.utils;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class Config {
     //定量地设置一些参数
     public static final double RESOURCE_MGMT_INTERVAL = 100;
@@ -33,4 +36,6 @@ public class Config {
 
     public static int TUPLE_ALL = 0;
     public static int TUPLE_IN_LIMIT_TIME = 0;
+
+//    public static Map<Map<String, String>, String> moduleToTuple = new HashMap<>();
 }

@@ -24,10 +24,6 @@ public class AppModule extends PowerVm {
     //执行下一步任务流的路径
     private Map<Pair<String, String>, SelectivityModel> selectivityMap;
 
-//    //专利：最大延迟容忍时间dtk
-//    private double tolerantTime;
-//    //专利：任务的计算量Wtk
-//    private double calculateAmount;
 
     //TODO: 在该模块上执行的任务Tuple名称
     private String tupleType;

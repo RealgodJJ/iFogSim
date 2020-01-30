@@ -92,7 +92,7 @@ public class DCNSFog {
 //                    moduleMapping.addModuleToDevice("object_tracker", device.getName());
                     }
 
-                    if (device.getName().startsWith("n")) {
+                    if (device.getName().startsWith("p-")) {
                         moduleMapping1.addModuleToDevice("patient_client", device.getName());
                     }
 //                    if (device.getName().startsWith("d-1") || device.getName().startsWith("d-3")) {
@@ -140,17 +140,15 @@ public class DCNSFog {
             //4.
             controller = new Controller("master-controller", fogDevices, sensors, actuators);
 
-            controller.submitApplication(cameraApplication,
-                    (CLOUD) ? (new ModulePlacementMapping(fogDevices, cameraApplication, moduleMapping))
-                            : (new ModulePlacementEdgewards(fogDevices, sensors, actuators, cameraApplication, moduleMapping)));
-            controller.submitApplication(clientApplication,
-                    (CLOUD) ? (new ModulePlacementMapping(fogDevices, clientApplication, moduleMapping1))
-                            : (new ModulePlacementEdgewards(fogDevices, sensors, actuators, clientApplication, moduleMapping1)));
+//            controller.submitApplication(cameraApplication,
+//                    (CLOUD) ? (new ModulePlacementMapping(fogDevices, cameraApplication, moduleMapping))
+//                            : (new ModulePlacementEdgewards(fogDevices, sensors, actuators, cameraApplication, moduleMapping)));
+//            controller.submitApplication(clientApplication,
+//                    (CLOUD) ? (new ModulePlacementMapping(fogDevices, clientApplication, moduleMapping1))
+//                            : (new ModulePlacementEdgewards(fogDevices, sensors, actuators, clientApplication, moduleMapping1)));
 
-//            controller.submitApplication(cameraApplication, new ModulePlacementMapping(fogDevices, cameraApplication, moduleMapping));
-//            controller.submitApplication(clientApplication, new ModulePlacementMapping(fogDevices, clientApplication, moduleMapping1));
-//            controller.submitApplication(clientApplication, new ModulePlacementOnlyCloud(fogDevices, sensors, actuators, cameraApplication));
-//            controller.submitApplication(clientApplication, new ModulePlacementOnlyCloud(fogDevices, sensors, actuators, clientApplication));
+            controller.submitApplication(cameraApplication, new ModulePlacementMapping(fogDevices, cameraApplication, moduleMapping));
+            controller.submitApplication(clientApplication, new ModulePlacementMapping(fogDevices, clientApplication, moduleMapping1));
 
             //5.
             TimeKeeper.getInstance().setSimulationStartTime(Calendar.getInstance().getTimeInMillis());
@@ -337,7 +335,7 @@ public class DCNSFog {
     }
 
     private static FogDevice addClient(String id, int userId, String appId, int parentId) {
-        FogDevice client = createFogDevice("n-" + id, 10000, 2000, 10000, 10000,
+        FogDevice client = createFogDevice("p-" + id, 10000, 2000, 10000, 10000,
                 0, 0, 98.56, 90.43);
         client.setParentId(parentId);
         Sensor sensor = new Sensor("b-" + id, "BG_VALUE", userId, appId, new DeterministicDistribution(2));
