@@ -30,15 +30,11 @@ public class AppLoop {
     }
 
     public boolean isStartModule(String module) {
-        if (getStartModule().equals(module))
-            return true;
-        return false;
+        return getStartModule().equals(module);
     }
 
     public boolean isEndModule(String module) {
-        if (getEndModule().equals(module))
-            return true;
-        return false;
+        return getEndModule().equals(module);
     }
 
     public String getNextModuleInLoop(String module) {
