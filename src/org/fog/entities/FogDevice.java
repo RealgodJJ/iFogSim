@@ -646,6 +646,7 @@ public class FogDevice extends PowerDataCenter {
                         Application application = getApplicationMap().get(tuple.getAppId());
                         Logger.debug(getName(), "Completed execution of tuple " + tuple.getCloudletId() + " on " + tuple.getDestModuleName());
 
+                        //TODO:
                         if (tuple.getDestModuleName().equals("object_tracker") && tuple.getBeginDeviceId() != getId())
                             sendBackToOriginal(tuple, tuple.getBeginDeviceId());
 

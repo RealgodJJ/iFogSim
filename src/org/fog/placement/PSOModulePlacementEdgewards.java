@@ -122,36 +122,27 @@ public class PSOModulePlacementEdgewards extends ModulePlacementEdgewards {
         int[] maxDeviceNum = new int[4];
         int[] maxDevicePlacementNum = new int[4];
         double[] totalEnergyConsumption = new double[vList.size()];   //记录12个粒子的系统能耗
-        for (FogDevice fogDevice : fogDevices) {
-            String name = fogDevice.getName();
-            if (!(name.startsWith("m") || name.startsWith("p")))
-                maxDeviceNum[fogDevice.getLevel()]++;
-            else
-                maxDeviceNum[fogDevice.getLevel()] = 1;
-        }
-
-        //TODO: 此处返回模块放置概率最大的设备所需数量，返回最大概率的几个数组位置（对应每个fogDevice设备）
-        //选取最大概率的几个可放置设备，设置同种模块在相邻节点之间只放置同层总设备数量的一半（向上取整）
-        for (int i = 0; i < maxDeviceNum.length; i++)
-            maxDevicePlacementNum[i] = (int) Math.ceil(((double) maxDeviceNum[i] + 1) / 2);
 
         for (int k = 0; k < vList.size(); k++) {
             for (int i = 0; i < numOfService; i++) {
+                updateMaxDevicePlacement(maxDeviceNum, maxDevicePlacementNum);
                 Map<Integer, Double> resultOfFogDevice = new TreeMap<>();   //按资源节点位置从小到大存储<资源节点位置，概率>键值对
-                Map<Integer, Boolean> canBePlaceInFogDevice = new HashMap<>();    //用于存储每个leafToRootPath上是否布置应用模块
+                Map<Integer, Boolean> canBePlace = new HashMap<>();    //用于存储每个leafToRootPath上是否布置应用模块
                 for (int j = 0; j < numOfDevice; j++) {
                     resultOfFogDevice.put(j, vList.get(k)[i][j]);
-                    canBePlaceInFogDevice.put(fogDevices.get(j).getId(), true);
+                    canBePlace.put(fogDevices.get(j).getId(), true);
                 }
                 //保存每一轮迭代之后的<边缘设备位置，模块>映射概率（由大到小排序）
                 resultOfFogDevice = sortByValueDescending(resultOfFogDevice);
 
-                //TODO: 保存当前轮次的ModuleMapping
-                roundCurrentModuleMapping(currentModuleMapping, maxDevicePlacementNum, i, resultOfFogDevice, canBePlaceInFogDevice);
+                //TODO: 更新并保存当前轮次的ModuleMapping
+                boolean isK0 = time == 0;
+                roundCurrentModuleMapping(currentModuleMapping, maxDevicePlacementNum, i, resultOfFogDevice, canBePlace, isK0);
             }
 
             //TODO: 计算当前粒子下，整个系统完成单元任务的总功耗
             roundEnergyConsumption(currentModuleMapping, totalEnergyConsumption, k);
+            currentModuleMapping.getModuleMapping().clear();    //清空当前粒子的currentModuleMapping
         }
         //TODO: 开始计算下一轮的vi
         //（1）寻找本轮最优的分配方案Nk
@@ -186,8 +177,27 @@ public class PSOModulePlacementEdgewards extends ModulePlacementEdgewards {
         System.out.println();
     }
 
+    //更新每一个应用模块在每层设备上的最大放置数量
+    private void updateMaxDevicePlacement(int[] maxDeviceNum, int[] maxDevicePlacementNum) {
+        for (int i = 0; i < maxDeviceNum.length; i++)
+            maxDeviceNum[i] = 0;
+
+        for (FogDevice fogDevice : fogDevices) {
+            String name = fogDevice.getName();
+            if (!(name.startsWith("m") || name.startsWith("p")))
+                maxDeviceNum[fogDevice.getLevel()]++;
+            else
+                maxDeviceNum[fogDevice.getLevel()] = 1;
+        }
+
+        //TODO: 此处返回模块放置概率最大的设备所需数量，返回最大概率的几个数组位置（对应每个fogDevice设备）
+        //选取最大概率的几个可放置设备，设置同种模块在相邻节点之间只放置同层总设备数量的一半（向上取整）
+        for (int i = 0; i < maxDeviceNum.length; i++)
+            maxDevicePlacementNum[i] = (int) Math.ceil(((double) maxDeviceNum[i] + 1) / 2);
+    }
+
     private void roundCurrentModuleMapping(ModuleMapping currentModuleMapping, int[] maxDevicePlacementNum, int i,
-                                           Map<Integer, Double> resultOfFogDevice, Map<Integer, Boolean> canBePlaceInFogDevice) {
+                                           Map<Integer, Double> resultOfFogDevice, Map<Integer, Boolean> canBePlace, boolean isK0) {
         for (Map.Entry<Integer, Double> entry : resultOfFogDevice.entrySet()) {
             System.out.println("key= " + entry.getKey() + " and value= " + entry.getValue());
 
@@ -195,26 +205,28 @@ public class PSOModulePlacementEdgewards extends ModulePlacementEdgewards {
             FogDevice currentFogDevice = fogDevices.get(entry.getKey());
             int neighborNum = fogDevices.get(entry.getKey()).getNeighborIds().size();
 
-            //存在邻居节点的边缘节点
-            if (neighborNum != 0 && maxDevicePlacementNum[currentFogDevice.getLevel()] != 0) {
-                //TODO：只设置了当前节点往上的节点不能够放置该模块，从底层向上遍历所以应该会全部考虑到
-                if (canBePlaceInFogDevice.get(currentFogDevice.getId()) && entry.getValue() > 0.5) {
+            //概率值从大到小排布，一旦低于0.5，直接退出当前应用模块的循环
+            if (entry.getValue() < 0.5)
+                break;
+
+            if (canBePlace.get(currentFogDevice.getId()) && entry.getValue() >= 0.5) {
+                if (neighborNum != 0 && maxDevicePlacementNum[currentFogDevice.getLevel()] != 0) {
+                    //存在邻居节点的边缘节点
+                    //TODO：只设置了当前节点往上的节点不能够放置该模块，从底层向上遍历所以应该会全部考虑到
                     currentModuleMapping.addModuleToDevice(appModules.get(i).getName(), currentFogDevice.getName());
-                    canBePlaceInFogDevice(canBePlaceInFogDevice, currentFogDevice);
+                    canBePlaceInFogDevice(canBePlace, currentFogDevice, isK0);
                     maxDevicePlacementNum[currentFogDevice.getLevel()]--;
-                }
-            } else if (maxDevicePlacementNum[currentFogDevice.getLevel()] != 0 &&
-                    currentFogDevice.getName().charAt(0) == appModules.get(i).getAppId().charAt(0)) {
-                //TODO：只设置了当前节点往上的节点不能够放置该模块，从底层向上遍历所以应该会全部考虑到
-                if (canBePlaceInFogDevice.get(currentFogDevice.getId()) && entry.getValue() > 0.5) {
+                    //TODO：邻居节点的模块放置安排
+                } else if (maxDevicePlacementNum[currentFogDevice.getLevel()] != 0 &&
+                        currentFogDevice.getLevel() == 0) {
+                    //无邻居节点的底层节点
+                    //TODO：只设置了当前节点往上的节点不能够放置该模块，从底层向上遍历所以应该会全部考虑到
                     currentModuleMapping.addModuleToDevice(appModules.get(i).getName(), currentFogDevice.getName());
-                    canBePlaceInFogDevice(canBePlaceInFogDevice, currentFogDevice);
-                }
-            } else if (currentFogDevice.getName().equals("cloud")) {    //该资源节点是云服务器
-                //TODO：只设置了当前节点往上的节点不能够放置该模块，从底层向上遍历所以应该会全部考虑到
-                if (canBePlaceInFogDevice.get(currentFogDevice.getId()) && entry.getValue() > 0.5) {
+                    canBePlaceInFogDevice(canBePlace, currentFogDevice, isK0);
+                } else if (currentFogDevice.getLevel() == 2 || currentFogDevice.getLevel() == 3) {    //该资源节点是云服务器或是总代理
+                    //TODO：只设置了当前节点往上的节点不能够放置该模块，从底层向上遍历所以应该会全部考虑到
                     currentModuleMapping.addModuleToDevice(appModules.get(i).getName(), currentFogDevice.getName());
-                    canBePlaceInFogDevice(canBePlaceInFogDevice, currentFogDevice);
+                    canBePlaceInFogDevice(canBePlace, currentFogDevice, isK0);
                 }
             }
         }
@@ -225,44 +237,96 @@ public class PSOModulePlacementEdgewards extends ModulePlacementEdgewards {
         for (Map.Entry<String, List<String>> deviceToModules : currentModuleMapping.getModuleMapping().entrySet()) {
             String deviceName = deviceToModules.getKey();
             List<String> moduleNames = deviceToModules.getValue();
+            List<AppModule> appModules = new ArrayList<>();
 
-            //计算当前边缘设备上所有应用模块加起来的功耗
+            FogDevice fogDevice = (FogDevice) CloudSim.getEntity(deviceName);
+            int totalMips = fogDevice.getHost().getTotalMips();
+
             for (String moduleName : moduleNames) {
                 AppModule appModule;
-                List<AppEdge> appEdges;
-
-                //获取当前moduleName的AppModule和其之前的AppEdge
-                if (getApplicationList().get(0).hasThisAppModule(moduleName)) {
+                if (getApplicationList().get(0).hasThisAppModule(moduleName))
                     appModule = getApplicationList().get(0).getModuleByName(moduleName);
-                    appEdges = getApplicationList().get(0).getAppEdge(moduleName);
-                } else {
+                else
                     appModule = getApplicationList().get(1).getModuleByName(moduleName);
-                    appEdges = getApplicationList().get(1).getAppEdge(moduleName);
+
+                appModules.add(appModule);
+            }
+
+            //TODO：应该先把当前设备上所有模块的利用率总和全部算出来
+            double utilization = 0;
+            for (AppModule appModule : appModules) {
+                utilization += appModule.getMips() / totalMips;
+            }
+
+            //计算当前边缘设备上所有应用模块加起来的功耗
+            for (AppModule appModule : appModules) {
+                List<AppEdge> appEdges;
+                //获取当前moduleName之前的AppEdge
+                if (getApplicationList().get(0).hasThisAppModule(appModule.getName())) {
+                    appEdges = getApplicationList().get(0).getAppEdge(appModule.getName());
+                } else {
+                    appEdges = getApplicationList().get(1).getAppEdge(appModule.getName());
                 }
 
-                FogDevice fogDevice = (FogDevice) CloudSim.getEntity(deviceName);
                 for (AppEdge appEdge : appEdges) {
                     //应用模块采用时间分配策略，则宏观上采用以下方式
                     deviceEnergyConsumption += fogDevice.getHost().getPowerModel().
-                            getPower(appModule.getMips() / fogDevice.getHost().getTotalMips()) *
-                            appEdge.getTupleCpuLength() / fogDevice.getHost().getTotalMips();
+                            getPower(utilization) * appEdge.getTupleCpuLength() / totalMips;
 //                        //应用模块采用空间分配策略，则宏观上采用以下方式
 //                        deviceEnergyConsumption += fogDevice.getHost().getPowerModel().
 //                                getPower(appModule.getMips() / fogDevice.getHost().getTotalMips()) *
 //                                appEdge.getTupleCpuLength() / appModule.getMips();
                 }
             }
+//            //计算当前边缘设备上所有应用模块加起来的功耗
+//            for (String moduleName : moduleNames) {
+//                AppModule appModule;
+//                List<AppEdge> appEdges;
+//
+//                //获取当前moduleName的AppModule和其之前的AppEdge
+//                if (getApplicationList().get(0).hasThisAppModule(moduleName)) {
+//                    appModule = getApplicationList().get(0).getModuleByName(moduleName);
+//                    appEdges = getApplicationList().get(0).getAppEdge(moduleName);
+//                } else {
+//                    appModule = getApplicationList().get(1).getModuleByName(moduleName);
+//                    appEdges = getApplicationList().get(1).getAppEdge(moduleName);
+//                }
+//
+//                for (AppEdge appEdge : appEdges) {
+//                    //应用模块采用时间分配策略，则宏观上采用以下方式
+//                    utilization = appModule.getMips() / fogDevice.getHost().getTotalMips();
+//                    deviceEnergyConsumption += fogDevice.getHost().getPowerModel().
+//                            getPower(utilization) * appEdge.getTupleCpuLength() / fogDevice.getHost().getTotalMips();
+//                }
+//            }
         }
         //设定每一轮所有粒子的预估总功耗
         totalEnergyConsumption[round] = deviceEnergyConsumption;
     }
 
-    private void canBePlaceInFogDevice(Map<Integer, Boolean> canBePlaceInFogDevice, FogDevice currentFogDevice) {
-        FogDevice forParent = currentFogDevice;
-        canBePlaceInFogDevice.put(forParent.getId(), false);
+    private void canBePlaceInFogDevice(Map<Integer, Boolean> canBePlace, FogDevice currentFogDevice, boolean isK0) {
+        //（1）如果底层边缘节点已经部署该模块，则上层节点无需再次布置
+        canBePlaceInParent(canBePlace, currentFogDevice);
+
+        //（2）如果是初始化种群，则采用高层资源节点放置模块，则底层节点不放置原则
+        canBePlaceInChildren(canBePlace, currentFogDevice, isK0);
+    }
+
+    private void canBePlaceInParent(Map<Integer, Boolean> canBePlace, FogDevice forParent) {
+        canBePlace.put(forParent.getId(), false);
         while (forParent.getParentId() != -1) {
             forParent = (FogDevice) CloudSim.getEntity(forParent.getParentId());
-            canBePlaceInFogDevice.put(forParent.getId(), false);
+            canBePlace.put(forParent.getId(), false);
+        }
+    }
+
+    private void canBePlaceInChildren(Map<Integer, Boolean> canBePlace, FogDevice currentFogDevice, boolean isK0) {
+        if (isK0) {
+            for (int childId : currentFogDevice.getChildrenIds()) {
+                canBePlace.put(childId, false);
+                FogDevice childFogDevice = (FogDevice) CloudSim.getEntity(childId);
+                canBePlaceInChildren(canBePlace, childFogDevice, isK0);
+            }
         }
     }
 
@@ -373,7 +437,7 @@ public class PSOModulePlacementEdgewards extends ModulePlacementEdgewards {
                                 v[i][j] = 0.8;
                             else if (k % 10 == 5 || k % 10 == 8 || k % 10 == 9)
                                 v[i][j] = 1;
-                        } else if (appLoop1.hasModule(moduleName)){
+                        } else if (appLoop1.hasModule(moduleName)) {
                             if (k % 10 == 0)
                                 v[i][j] = 0.6;
                             else if (k % 10 == 1 || k % 10 == 3 || k % 10 == 6)
@@ -391,7 +455,7 @@ public class PSOModulePlacementEdgewards extends ModulePlacementEdgewards {
                                 v[i][j] = 0.8;
                             else if (k % 6 == 0)
                                 v[i][j] = 1;
-                        } else if (appLoop2.hasModule(moduleName)){
+                        } else if (appLoop2.hasModule(moduleName)) {
                             if (k % 6 == 5)
                                 v[i][j] = 0.6;
                             else if (k % 6 == 2 || k % 6 == 4)
