@@ -84,46 +84,89 @@ public class DCNSFog {
             //3.
             ModuleMapping moduleMapping = ModuleMapping.createModuleMapping(); // initializing a module mapping
             ModuleMapping moduleMapping1 = ModuleMapping.createModuleMapping(); // initializing a module mapping
+
             if (!CLOUD) {
                 for (FogDevice device : fogDevices) {
-                    if (device.getName().startsWith("m")) { // names of all Smart Cameras start with 'm'
-                        moduleMapping.addModuleToDevice("motion_detector", device.getName());  // fixing 1 instance of the Motion Detector module to each Smart Camera
-//                    moduleMapping.addModuleToDevice("object_detector", device.getName());
-//                    moduleMapping.addModuleToDevice("object_tracker", device.getName());
-                    }
-
-                    if (device.getName().startsWith("p-")) {
-                        moduleMapping1.addModuleToDevice("patient_client", device.getName());
-                    }
-//                    if (device.getName().startsWith("d-1") || device.getName().startsWith("d-3")) {
+//                    if (device.getName().startsWith("m")) { // names of all Smart Cameras start with 'm'
+//                        moduleMapping.addModuleToDevice("motion_detector", device.getName());  // fixing 1 instance of the Motion Detector module to each Smart Camera
+//                    }
+//
+//                    if (device.getName().startsWith("p-")) {
+//                        moduleMapping1.addModuleToDevice("patient_client", device.getName());
+//                    }
+//                    if (device.getName().startsWith("d")) {
 //                        moduleMapping1.addModuleToDevice("data_analysis", device.getName());
 //                        moduleMapping1.addModuleToDevice("diagnostic_module", device.getName());
-//                        moduleMapping1.addModuleToDevice("object_detector", device.getName());
-//                        moduleMapping1.addModuleToDevice("object_tracker", device.getName());
-//                    } else if (device.getName().startsWith("d-0") || device.getName().startsWith("d-2")) {
-//                        moduleMapping.addModuleToDevice("data_analysis", device.getName());
-//                        moduleMapping.addModuleToDevice("diagnostic_module", device.getName());
 //                        moduleMapping.addModuleToDevice("object_detector", device.getName());
 //                        moduleMapping.addModuleToDevice("object_tracker", device.getName());
 //                    }
-                    if (device.getName().startsWith("d")) {
-                        moduleMapping1.addModuleToDevice("data_analysis", device.getName());
-                        moduleMapping1.addModuleToDevice("diagnostic_module", device.getName());
-                        moduleMapping.addModuleToDevice("object_detector", device.getName());
-                        moduleMapping.addModuleToDevice("object_tracker", device.getName());
-                    }
 
-//                    if (device.getName().startsWith("proxy")) {
+                    //方案一
+//                    if (device.getName().equals("p-3-3") || device.getName().equals("p-3-2")
+//                            || device.getName().equals("p-1-3") || device.getName().equals("p-1-2")) {
+//                        moduleMapping1.addModuleToDevice("patient_client", device.getName());
+//                    }
+//
+//                    if (device.getName().equals("d-3") || device.getName().equals("d-1")) {
+//                        moduleMapping1.addModuleToDevice("patient_client", device.getName());
+//                    }
+//
+//                    if (device.getName().equals("d-2") || device.getName().equals("d-0")) {
+//                        moduleMapping.addModuleToDevice("motion_detector", device.getName());
+//                        moduleMapping.addModuleToDevice("object_detector", device.getName());
+//                    }
+//
+//                    if (device.getName().equals("proxy-server")) {
+//                        moduleMapping.addModuleToDevice("object_tracker", device.getName());
 //                        moduleMapping1.addModuleToDevice("data_analysis", device.getName());
+//                        moduleMapping1.addModuleToDevice("diagnostic_module", device.getName());
+//                    }
+
+                    //方案二
+//                    if (device.getName().equals("p-3-3") || device.getName().equals("p-3-2")
+//                            || device.getName().equals("p-1-3") || device.getName().equals("p-1-2")) {
+//                        moduleMapping1.addModuleToDevice("patient_client", device.getName());
+//                    }
+//
+//                    if (device.getName().equals("d-2") || device.getName().equals("d-0")) {
+//                        moduleMapping.addModuleToDevice("motion_detector", device.getName());
+//                        moduleMapping.addModuleToDevice("object_detector", device.getName());
 //                        moduleMapping.addModuleToDevice("object_tracker", device.getName());
 //                    }
+//
+//                    if (device.getName().equals("d-3") || device.getName().equals("d-1")) {
+//                        moduleMapping1.addModuleToDevice("patient_client", device.getName());
+//                    }
+//
+//                    if (device.getName().equals("proxy-server")) {
+//                        moduleMapping1.addModuleToDevice("data_analysis", device.getName());
+//                        moduleMapping1.addModuleToDevice("diagnostic_module", device.getName());
+//                    }
+
+                    //方案三
+                    if (device.getName().equals("p-3-3") || device.getName().equals("p-3-2")
+                            || device.getName().equals("p-1-3") || device.getName().equals("p-1-2")) {
+                        moduleMapping1.addModuleToDevice("patient_client", device.getName());
+                    }
+
+                    if (device.getName().equals("d-2") || device.getName().equals("d-0")) {
+                        moduleMapping.addModuleToDevice("motion_detector", device.getName());
+                    }
+
+                    if (device.getName().equals("d-3") || device.getName().equals("d-1")) {
+                        moduleMapping1.addModuleToDevice("patient_client", device.getName());
+                        moduleMapping1.addModuleToDevice("data_analysis", device.getName());
+                    }
+
+                    if (device.getName().equals("proxy-server")) {
+                        moduleMapping.addModuleToDevice("object_detector", device.getName());
+                        moduleMapping.addModuleToDevice("object_tracker", device.getName());
+                        moduleMapping1.addModuleToDevice("diagnostic_module", device.getName());
+                    }
                 }
             }
             moduleMapping.addModuleToDevice("user_interface", "cloud"); // fixing instances of User Interface module in the Cloud
             //TODO: 将所有的计算模块添加到云端，以保证有些任务需要在云端进行执行
-//            moduleMapping.addModuleToDevice("motion_detector", "cloud");
-//            moduleMapping.addModuleToDevice("object_detector", "cloud");
-//            moduleMapping.addModuleToDevice("object_tracker", "cloud");
 //            if (!CLOUD) {
             if (CLOUD) {
                 // if the mode of deployment is cloud-based
@@ -134,7 +177,6 @@ public class DCNSFog {
                 moduleMapping1.addModuleToDevice("patient_client", "cloud");
                 moduleMapping1.addModuleToDevice("data_analysis", "cloud");
                 moduleMapping1.addModuleToDevice("diagnostic_module", "cloud");
-//                moduleMapping1.addModuleToDevice("", "cloud");
             }
 
             //4.
@@ -377,7 +419,7 @@ public class DCNSFog {
 
         //相对于Host加入了功耗计算的模型
         PowerHost host = new PowerHost(hostId, new RamProvisionerSimple(ram), new BwProvisionerOverbooking(bw), storage,
-                peList, new StreamOperatorScheduler(peList), new FogLinearPowerModel(busyPower, idlePower));
+                peList, new StreamOperatorScheduler(peList), new FogQuadraticPowerModel(busyPower, idlePower));
 
         List<Host> hostList = new ArrayList<Host>();
         hostList.add(host);
@@ -426,7 +468,7 @@ public class DCNSFog {
 
         //相对于Host加入了功耗计算的模型
         PowerHost host = new PowerHost(hostId, new RamProvisionerSimple(ram), new BwProvisionerOverbooking(bw), storage,
-                peList, new StreamOperatorScheduler(peList), new FogLinearPowerModel(busyPower, idlePower));
+                peList, new StreamOperatorScheduler(peList), new FogQuadraticPowerModel(busyPower, idlePower));
 
         List<Host> hostList = new ArrayList<Host>();
         hostList.add(host);
